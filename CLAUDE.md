@@ -7,7 +7,7 @@
 - **이름**: 마음목탁 – 방하착 (저장소 `maeum-moktak`)
 - **정체**: 종교가 없는 사람도 부담 없이 쓰는 불교 지혜 기반 1인용 마음 셀프케어 웹앱. Mindpullness(CBT·ACT)의 형제 앱
 - **배포**: GitHub Pages `https://jstd-jeostdu.github.io/maeum-moktak/`
-- **파일 구성**: `index.html` 단일 파일 + `sunim/`(정우스님 캐릭터) + `data/`(구절 원본 데이터)
+- **파일 구성**: `index.html` 단일 파일 + `sunim/`(정우스님 캐릭터) + `icons/`(연꽃 파비콘·홈 화면 아이콘) + `data/`(구절 원본 데이터)
 
 ## 2. 기술 원칙
 
