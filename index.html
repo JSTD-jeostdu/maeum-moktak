@@ -1,0 +1,1386 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>마음목탁 – 방하착</title>
+<meta name="description" content="지금 마음을 한 번 누르면, 부처님 말씀 한 줄과 짧은 쉼을 건네는 마음 셀프케어 앱">
+<meta name="theme-color" content="#FBF7F0">
+<link rel="icon" href="sunim/moktak_still.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<style>
+/* ===== 디자인 토큰 (PRD §4-1 연꽃 파스텔) ===== */
+:root{
+  --bg:#FBF7F0; --card:#FFFFFF;
+  --lotus:#F2A7B5; --lotus-soft:#FCE6EB; --moktak:#C8925A; --moktak-soft:#F3E6D6; --leaf:#7FB7A4; --leaf-soft:#E2F0EA;
+  --ink:#2E2A27; --ink-sub:#6B635C; --line:#EDE5DA;
+  --lotus-text:#A3455C; --moktak-text:#8A5A2B; --leaf-text:#3F7A66;
+  --radius:20px; --shadow:0 2px 10px rgba(46,42,39,.05);
+  --ease:cubic-bezier(.22,.61,.36,1); --dur:.35s;
+  --font-title:'Gowun Dodum','Pretendard Variable',Pretendard,sans-serif;
+  --font-body:'Pretendard Variable',Pretendard,-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Noto Sans KR',sans-serif;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:16px;line-height:1.6;word-break:keep-all}
+button{font:inherit;color:inherit;cursor:pointer}
+img{display:block}
+#app{max-width:480px;margin:0 auto;min-height:100vh;min-height:100dvh;padding:0 18px calc(96px + env(safe-area-inset-bottom));position:relative}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+
+/* ===== 헤더 ===== */
+header.top{display:flex;align-items:baseline;gap:8px;padding:18px 2px 6px}
+.logo{font-family:var(--font-title);font-size:24px;letter-spacing:-.5px}
+.logo-sub{font-family:var(--font-title);font-size:14px;color:var(--moktak-text)}
+
+/* ===== 화면 전환 ===== */
+.screen{display:none}
+.screen.active{display:block;animation:rise var(--dur) var(--ease)}
+@keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+/* ===== 공통 카드 ===== */
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px}
+.section-title{font-family:var(--font-title);font-size:19px;margin:26px 2px 12px}
+.badge{display:inline-block;font-size:12px;padding:2px 9px;border-radius:99px;background:var(--moktak-soft);color:var(--moktak-text)}
+
+/* ===== 목탁 무대 (U5) ===== */
+.moktak-stage{position:relative;display:flex;align-items:center;gap:10px;padding:14px 14px 10px;background:linear-gradient(180deg,#FFF 0%,var(--lotus-soft) 140%)}
+.moktak-btn{position:relative;flex:0 0 auto;width:132px;height:186px;border:0;background:transparent;padding:0;touch-action:manipulation;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+.moktak-btn img{width:100%;height:100%;object-fit:contain;pointer-events:none;transition:transform .12s var(--ease)}
+.moktak-btn.bump img{transform:scale(.95) translateY(2px)}
+.moktak-btn:focus-visible{outline:3px solid var(--lotus-text);outline-offset:4px;border-radius:16px}
+.float-word{position:absolute;left:50%;top:38%;font-family:var(--font-title);font-size:18px;color:var(--moktak-text);pointer-events:none;white-space:nowrap;animation:floatUp 1.4s var(--ease) forwards}
+@keyframes floatUp{0%{opacity:0;transform:translate(-50%,0) scale(.9)}15%{opacity:1}100%{opacity:0;transform:translate(-50%,-70px) scale(1.05);filter:blur(1px)}}
+.stage-right{flex:1;min-width:0}
+.bubble{position:relative;background:#fff;border:1px solid var(--line);border-radius:16px;padding:10px 13px;font-size:15px;line-height:1.55;min-height:48px}
+.bubble::before{content:"";position:absolute;left:-7px;top:22px;width:12px;height:12px;background:#fff;border-left:1px solid var(--line);border-bottom:1px solid var(--line);transform:rotate(45deg)}
+.bubble.fade{animation:bubbleIn .4s var(--ease)}
+@keyframes bubbleIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+.moktak-count{margin:10px 2px 0;font-size:14px;color:var(--ink-sub)}
+.moktak-count b{font-family:var(--font-title);font-size:20px;color:var(--ink);font-weight:400}
+.moktak-hint{font-size:12.5px;color:var(--ink-sub);margin:2px 2px 0}
+
+/* ===== 마음 칩 (F1) ===== */
+.mood-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+.chip{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:76px;padding:10px 6px;border:1px solid var(--line);border-radius:18px;background:var(--card);font-size:14px;line-height:1.3;text-align:center;transition:transform .15s var(--ease),background .2s}
+.chip .emo{font-size:24px;line-height:1.1}
+.chip:active{transform:scale(.96)}
+.chip.selected{background:var(--lotus);border-color:var(--lotus)}
+.chip-crisis-wrap{margin-top:14px;padding-top:14px;border-top:1px dashed var(--line)}
+.chip-crisis{width:100%;min-height:52px;flex-direction:row;gap:8px;border:1.5px solid var(--ink);font-size:15px}
+
+/* ===== 구절 카드 (F2) ===== */
+.verse-card{position:relative;background:#fff}
+.verse-text{font-family:var(--font-title);font-size:19px;line-height:1.7;margin:4px 0 10px}
+.verse-source{font-size:13px;color:var(--moktak-text)}
+.verse-note{font-size:14.5px;color:var(--ink-sub);margin:10px 0 0}
+.verse-practice{margin-top:12px;padding:10px 12px;border-radius:14px;background:var(--leaf-soft);font-size:14.5px;color:var(--ink)}
+.verse-practice::before{content:"이렇게 해 보세요 · ";color:var(--leaf-text);font-weight:600}
+.verse-actions{display:flex;gap:8px;margin-top:14px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:44px;padding:0 16px;border-radius:99px;border:1px solid var(--line);background:#fff;font-size:14.5px}
+.btn-primary{background:var(--lotus);border-color:var(--lotus);color:var(--ink);font-weight:600}
+.btn-ghost{background:transparent}
+.heart{font-size:18px;line-height:1}
+.heart.on{color:var(--lotus-text)}
+.heart.pop{animation:pop .45s var(--ease)}
+@keyframes pop{0%{transform:scale(1)}40%{transform:scale(1.35)}100%{transform:scale(1)}}
+
+/* ===== 바텀시트 / 모달 ===== */
+.overlay{position:fixed;inset:0;z-index:100;background:rgba(46,42,39,.35);display:flex;align-items:flex-end;justify-content:center;animation:fadeIn .3s var(--ease)}
+.overlay.center{align-items:center;padding:20px}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.sheet{width:100%;max-width:480px;max-height:88vh;overflow-y:auto;background:var(--bg);border-radius:26px 26px 0 0;padding:10px 18px calc(24px + env(safe-area-inset-bottom));animation:sheetUp .4s var(--ease)}
+.overlay.center .sheet{border-radius:26px;max-width:420px;padding:22px 20px}
+@keyframes sheetUp{from{transform:translateY(40px);opacity:.4}to{transform:none;opacity:1}}
+.sheet-handle{width:40px;height:5px;border-radius:9px;background:var(--line);margin:4px auto 10px}
+.sheet-head{display:flex;align-items:flex-end;gap:10px;margin-bottom:12px}
+.sheet-head img{width:78px;height:78px;object-fit:contain;flex:0 0 auto}
+.sheet-head .bubble{flex:1}
+.note-input{width:100%;min-height:44px;padding:10px 14px;border:1px solid var(--line);border-radius:14px;background:#fff;font:inherit;font-size:15px;color:var(--ink);resize:none}
+.note-input:focus{outline:2px solid var(--lotus);border-color:var(--lotus)}
+.rec-list{display:grid;gap:10px;margin-top:14px}
+.rec{display:flex;align-items:center;gap:12px;padding:14px 16px;width:100%;text-align:left}
+.rec .rec-ico{font-size:24px;flex:0 0 auto}
+.rec .rec-body{flex:1;min-width:0}
+.rec .rec-title{font-weight:600;font-size:15px}
+.rec .rec-desc{font-size:13.5px;color:var(--ink-sub)}
+.close-row{display:flex;justify-content:center;margin-top:16px}
+
+/* ===== 위기 카드 (F8 — 수정·삭제 금지 영역) ===== */
+.crisis{text-align:center}
+.crisis img{width:96px;height:96px;object-fit:contain;margin:0 auto 6px}
+.crisis h2{font-family:var(--font-title);font-weight:400;font-size:21px;margin:4px 0 8px}
+.crisis p{margin:0 0 14px;color:var(--ink-sub);font-size:15px}
+.tel{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 16px;margin-top:8px;border-radius:16px;background:#fff;border:1.5px solid var(--ink);text-decoration:none;color:var(--ink);text-align:left}
+.tel b{font-size:20px;letter-spacing:.5px}
+.tel span{font-size:13.5px;color:var(--ink-sub)}
+
+/* ===== 빈 화면 (U6) ===== */
+.empty{text-align:center;padding:36px 10px 10px}
+.empty img{width:150px;height:150px;object-fit:contain;margin:0 auto 10px}
+.empty h2{font-family:var(--font-title);font-weight:400;font-size:20px;margin:0 0 6px}
+.empty p{color:var(--ink-sub);margin:0 0 16px;font-size:15px}
+
+/* ===== 기록 탭 ===== */
+.mood-log{display:grid;gap:8px}
+.mood-log-item{display:flex;gap:10px;align-items:flex-start;padding:12px 14px}
+.mood-log-item .emo{font-size:22px}
+.mood-log-item .meta{font-size:12.5px;color:var(--ink-sub)}
+.setting-row{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:52px;padding:4px 0;border-bottom:1px solid var(--line)}
+.setting-row:last-child{border-bottom:0}
+.switch{position:relative;width:52px;height:30px;border-radius:99px;border:0;background:var(--line);flex:0 0 auto;transition:background .25s}
+.switch::after{content:"";position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.15);transition:transform .25s var(--ease)}
+.switch[aria-checked="true"]{background:var(--leaf)}
+.switch[aria-checked="true"]::after{transform:translateX(22px)}
+.help-lines{font-size:14px;color:var(--ink-sub)}
+.help-lines a{color:var(--ink);font-weight:600}
+
+/* ===== 하단 탭 ===== */
+nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:50;background:rgba(251,247,240,.94);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom)}
+nav.tabs .inner{max-width:480px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr)}
+.tab{display:flex;flex-direction:column;align-items:center;gap:1px;min-height:62px;padding:8px 0 6px;border:0;background:none;font-size:12px;color:var(--ink-sub)}
+.tab .ti{font-size:21px;line-height:1.2;filter:grayscale(.6);opacity:.75;transition:all .25s}
+.tab[aria-selected="true"]{color:var(--ink);font-weight:600}
+.tab[aria-selected="true"] .ti{filter:none;opacity:1;transform:translateY(-1px)}
+
+/* ===== 토스트 (U9) ===== */
+#toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom));z-index:200;transform:translateX(-50%);display:none;align-items:center;gap:12px;max-width:calc(100% - 32px);padding:11px 16px;border-radius:14px;background:var(--ink);color:#fff;font-size:14.5px;box-shadow:0 6px 20px rgba(0,0,0,.18)}
+#toast.show{display:flex;animation:fadeIn .25s var(--ease)}
+#toast button{border:0;background:none;color:var(--lotus);font-weight:700;padding:4px}
+
+/* ===== 스플래시 (U3) ===== */
+#splash{position:fixed;inset:0;z-index:300;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;transition:opacity .45s var(--ease)}
+#splash img{width:120px;height:169px;object-fit:contain}
+#splash .logo{font-size:26px}
+#splash.hide{opacity:0;pointer-events:none}
+
+/* ===== 목탁 호흡 (U5 롱프레스) ===== */
+.breath{text-align:center;padding:10px 0 4px}
+.breath-circle{width:170px;height:170px;margin:12px auto 16px;border-radius:50%;background:radial-gradient(circle,var(--lotus-soft) 0%,var(--lotus) 100%);display:flex;align-items:center;justify-content:center;font-family:var(--font-title);font-size:20px;transform:scale(.72);transition:transform 4s ease-in-out}
+.breath-circle.in{transform:scale(1)}
+.breath-time{font-size:14px;color:var(--ink-sub)}
+
+/* ===== 2단계: 필터 칩 ===== */
+.fchips{display:flex;gap:8px;overflow-x:auto;padding:2px 2px 12px;margin:0 -2px;scrollbar-width:none}
+.fchips::-webkit-scrollbar{display:none}
+.fchip{flex:0 0 auto;min-height:40px;padding:0 14px;border-radius:99px;border:1px solid var(--line);background:#fff;font-size:14px;white-space:nowrap}
+.fchip[aria-pressed="true"]{background:var(--lotus);border-color:var(--lotus);font-weight:600}
+.stack>*+*{margin-top:12px}
+
+/* ===== 털어놓기 (F3) ===== */
+.wiz-progress{display:flex;gap:6px;justify-content:center;margin:2px 0 14px}
+.wiz-progress i{width:8px;height:8px;border-radius:50%;background:var(--line);transition:background .3s}
+.wiz-progress i.on{background:var(--lotus-text)}
+.wiz-tag{display:inline-block;font-size:12.5px;font-weight:600;color:var(--leaf-text);margin-bottom:2px}
+.wiz-q{font-family:var(--font-title);font-size:20px;line-height:1.5;margin:0 0 6px;font-weight:400}
+.wiz-help{font-size:14px;color:var(--ink-sub);margin:0 0 12px}
+.note-input.big{min-height:128px;resize:vertical}
+.wiz-nav{display:flex;gap:8px;align-items:center;margin-top:16px}
+.wiz-nav .spacer{flex:1}
+.tagchips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.tagchip{min-height:38px;padding:0 12px;border-radius:99px;border:1px dashed var(--moktak);background:#fff;font-size:13.5px}
+.tagchip[aria-pressed="true"]{background:var(--moktak-soft);border-style:solid}
+.weight{display:flex;align-items:center;gap:14px;padding:10px 4px}
+.weight input[type=range]{flex:1;height:44px;accent-color:var(--lotus-text)}
+.weight-num{font-family:var(--font-title);font-size:30px;min-width:60px;text-align:right}
+.weight-scale{display:flex;justify-content:space-between;font-size:12.5px;color:var(--ink-sub);padding:0 4px}
+.ba{display:flex;align-items:flex-end;justify-content:center;gap:18px;font-family:var(--font-title);font-size:36px;margin:8px 0 4px}
+.ba small{display:block;font-size:12.5px;color:var(--ink-sub);font-family:var(--font-body);text-align:center}
+.ba .arrow{font-size:22px;color:var(--ink-sub);padding-bottom:22px}
+
+/* ===== 수행 (F4) ===== */
+.pcard{display:flex;gap:14px;align-items:center}
+.pcard img{width:76px;height:76px;object-fit:contain;flex:0 0 auto}
+.pcard h3{font-family:var(--font-title);font-weight:400;font-size:18px;margin:0}
+.pcard p{margin:2px 0 0;font-size:14px;color:var(--ink-sub)}
+.min-btns{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.metta-target{font-family:var(--font-title);font-size:22px;margin:4px 0 0}
+.metta-phrase{font-family:var(--font-title);font-size:21px;color:var(--lotus-text);min-height:68px;display:flex;align-items:center;justify-content:center;margin:12px 0}
+.metta-phrase span{animation:bubbleIn .6s var(--ease)}
+.metta-steps{display:flex;gap:6px;justify-content:center;margin-bottom:6px}
+
+/* ===== 마음 달력 (F5) ===== */
+.cal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.cal-head b{font-family:var(--font-title);font-size:18px;font-weight:400}
+.cal-nav{width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:#fff;font-size:18px}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;text-align:center}
+.cal-dow{font-size:12px;color:var(--ink-sub);padding:2px 0 4px}
+.cal-day{min-height:54px;border:0;border-radius:12px;background:transparent;display:flex;flex-direction:column;align-items:center;padding:4px 0 2px;font-size:12px;color:var(--ink-sub)}
+.cal-day .ce{font-size:20px;line-height:1.2;min-height:24px}
+.cal-day .cm{font-size:10px;color:var(--moktak-text);line-height:1.2}
+.cal-day.today{background:var(--lotus-soft);color:var(--ink);font-weight:600}
+.cal-day.sel{box-shadow:inset 0 0 0 2px var(--lotus-text)}
+.cal-day.blank{visibility:hidden}
+.week-sum{margin-top:12px;padding:12px 14px;border-radius:14px;background:var(--leaf-soft);font-size:14.5px}
+.day-detail{margin-top:12px}
+.list-item{display:block;width:100%;text-align:left;padding:14px 16px}
+.li-top{display:flex;justify-content:space-between;gap:8px;font-size:12.5px;color:var(--ink-sub)}
+.li-title{margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.detail dt{font-size:13px;color:var(--leaf-text);font-weight:600;margin-top:12px}
+.detail dd{margin:2px 0 0;white-space:pre-wrap}
+
+/* ===== 3단계: 챗봇·온보딩 (F7, U1) ===== */
+.fab{position:fixed;right:max(14px,calc(50% - 226px));bottom:calc(76px + env(safe-area-inset-bottom));z-index:60;width:62px;height:62px;border-radius:50%;border:1px solid var(--line);background:#fff;box-shadow:0 4px 14px rgba(46,42,39,.14);padding:0;overflow:hidden}
+.fab img{width:100%;height:100%;object-fit:cover;object-position:50% 12%;transform:scale(1.35) translateY(8%)}
+.chat-log{display:flex;flex-direction:column;gap:10px;padding:6px 0 4px}
+.chat-row{display:flex;gap:8px;align-items:flex-end;animation:bubbleIn .4s var(--ease)}
+.chat-row img{width:46px;height:46px;object-fit:contain;flex:0 0 auto}
+.chat-row .bubble{flex:1}
+.chat-me{align-self:flex-end;max-width:80%;padding:9px 13px;border-radius:16px 16px 4px 16px;background:var(--lotus);font-size:14.5px;animation:bubbleIn .3s var(--ease)}
+.chat-opts{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px;padding-top:12px;border-top:1px dashed var(--line)}
+.ob-act{margin-top:12px}
+.ob-feats{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.ob-feat{display:flex;flex-direction:column;align-items:flex-start;gap:1px;text-align:left;padding:12px;border-radius:16px;border:1px solid var(--line);background:#fff;min-height:44px}
+.ob-feat .emo{font-size:22px}
+.ob-feat small{font-size:12.5px;color:var(--ink-sub);line-height:1.4}
+.ob-feat[aria-pressed="true"]{background:var(--lotus-soft);border-color:var(--lotus-text)}
+.moktak-btn.invite img{animation:invite 1s var(--ease) 3}
+@keyframes invite{0%,100%{transform:none}30%{transform:rotate(-4deg) scale(1.03)}60%{transform:rotate(3deg)}}
+
+/* ===== 코치마크 (U2) ===== */
+.tip-wrap{position:fixed;inset:0;z-index:250;animation:fadeIn .3s var(--ease)}
+.tip-hole{position:fixed;border-radius:18px;box-shadow:0 0 0 9999px rgba(46,42,39,.5);pointer-events:none;transition:all .3s}
+.tip-bubble{position:fixed;left:50%;transform:translateX(-50%);width:min(380px,calc(100% - 32px));display:flex;gap:10px;align-items:center;padding:12px 14px;border-radius:18px;background:#fff;box-shadow:0 8px 24px rgba(0,0,0,.18)}
+.tip-bubble img{width:52px;height:52px;object-fit:contain;flex:0 0 auto}
+.tip-bubble p{margin:0;font-size:15px;line-height:1.55}
+.tip-ok{font-size:12.5px;color:var(--ink-sub)}
+.sync-badge{margin-left:auto;align-self:center;min-width:44px;min-height:36px;border:1px solid var(--line);border-radius:99px;background:#fff;font-size:14px;padding:0 10px}
+
+/* ===== 움직임 줄이기 (U8) ===== */
+html.reduce-motion *,html.reduce-motion *::before,html.reduce-motion *::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+@media (prefers-reduced-motion: reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+</style>
+</head>
+<body>
+<div id="splash" aria-hidden="true">
+  <img src="sunim/moktak_anim.gif" alt="">
+  <div class="logo">마음목탁</div>
+  <div class="logo-sub">방하착 · 내려놓는 연습</div>
+</div>
+
+<div id="app">
+  <header class="top">
+    <span class="logo">마음목탁</span><span class="logo-sub">방하착</span>
+    <button id="syncBadge" class="sync-badge" hidden data-goto="record"></button>
+  </header>
+
+  <!-- ===== 🪷 마음 (홈) ===== -->
+  <main id="screen-home" class="screen active" aria-label="마음">
+    <section class="card moktak-stage" aria-label="두드리는 목탁">
+      <button class="moktak-btn" id="moktakBtn" aria-label="목탁 두드리기. 길게 누르면 1분 목탁 호흡">
+        <img id="moktakImg" src="sunim/moktak_still.png" alt="목탁을 치는 정우스님" width="132" height="186">
+      </button>
+      <div class="stage-right">
+        <div class="bubble" id="homeBubble" aria-live="polite"></div>
+        <p class="moktak-count">오늘 똑 <b id="moktakCount">0</b>번</p>
+        <p class="moktak-hint">톡 두드리기 · 꾹 누르면 1분 목탁 호흡</p>
+      </div>
+    </section>
+    <div id="resumeCard"></div>
+
+    <h2 class="section-title">지금 마음은 어떤가요?</h2>
+    <div class="mood-grid" id="moodGrid"></div>
+    <div class="chip-crisis-wrap">
+      <button class="chip chip-crisis" id="crisisChip"><span class="emo">🆘</span>너무 힘들어요</button>
+    </div>
+
+    <h2 class="section-title" id="todayVerseTitle">오늘의 구절</h2>
+    <div id="todayVerse"></div>
+  </main>
+
+  <!-- ===== 📜 구절 ===== -->
+  <main id="screen-verse" class="screen" aria-label="구절">
+    <h2 class="section-title">구절</h2>
+    <div class="fchips" id="verseFilters" role="toolbar" aria-label="구절 고르기"></div>
+    <div id="verseList" class="stack"></div>
+  </main>
+
+  <!-- ===== 🧘 수행 ===== -->
+  <main id="screen-practice" class="screen" aria-label="수행">
+    <h2 class="section-title">짧은 수행</h2>
+    <div class="stack">
+      <section class="card">
+        <div class="pcard"><img src="sunim/2_meditate.png" alt="좌선하는 정우스님">
+          <div><h3>호흡 바라보기</h3><p>숨을 바꾸려 하지 않고, 들고 나는 숨을 알아차려요.</p></div></div>
+        <div class="min-btns"><button class="btn btn-primary" data-breath="1">1분</button><button class="btn" data-breath="3">3분</button><button class="btn" data-breath="5">5분</button></div>
+      </section>
+      <section class="card">
+        <div class="pcard"><img src="sunim/1_hapjang.png" alt="합장하는 정우스님">
+          <div><h3>자애 명상 3분</h3><p>나에게서 시작해 모든 존재에게 '편안하기를'.</p></div></div>
+        <div class="min-btns"><button class="btn btn-primary" id="mettaStart">시작하기</button></div>
+      </section>
+      <section class="card">
+        <div class="pcard"><img src="sunim/3_moktak.png" alt="목탁을 든 정우스님">
+          <div><h3>1분 목탁 호흡</h3><p>4초마다 울리는 '똑'에 숨을 맞춰요.</p></div></div>
+        <div class="min-btns"><button class="btn btn-primary" id="moktakBreathStart">시작하기</button></div>
+      </section>
+    </div>
+    <p class="help-lines" id="practiceSum" style="text-align:center;margin:16px 0 0"></p>
+    <p class="help-lines" style="text-align:center;margin:4px 0 0">사경(따라 쓰기)과 108 염주는 곧 열려요.</p>
+  </main>
+
+  <!-- ===== 📅 기록 ===== -->
+  <main id="screen-record" class="screen" aria-label="기록">
+    <h2 class="section-title" id="calTitle">마음 달력</h2>
+    <div class="card" id="calendar"></div>
+    <div id="weekSum"></div>
+    <div id="dayDetail" class="day-detail"></div>
+
+    <h2 class="section-title" id="reflectTitle" style="display:flex;justify-content:space-between;align-items:center">털어놓기 기록 <button class="btn" id="reflectNew" style="font-family:var(--font-body)">✍️ 새로 쓰기</button></h2>
+    <div id="reflectList" class="stack"></div>
+
+    <h2 class="section-title">설정</h2>
+    <div class="card">
+      <div class="setting-row"><span>목탁 소리</span><button class="switch" role="switch" data-setting="sound" aria-label="목탁 소리"></button></div>
+      <div class="setting-row"><span>진동</span><button class="switch" role="switch" data-setting="vibrate" aria-label="진동"></button></div>
+      <div class="setting-row"><span>움직임 줄이기</span><button class="switch" role="switch" data-setting="reduceMotion" aria-label="움직임 줄이기"></button></div>
+      <div class="setting-row"><span>화면 도움말 다시 보기</span><button class="btn" id="tipsReset">다시 보기</button></div>
+    </div>
+    <h2 class="section-title">기기 간 동기화</h2>
+    <div class="card" id="syncBox"></div>
+    <h2 class="section-title">쓰는 기능 고르기</h2>
+    <div class="card" id="featureSettings"></div>
+
+    <h2 class="section-title">도움이 필요할 때</h2>
+    <div class="card help-lines">
+      이 앱은 교육·자기돌봄 도구이며, 종교 권유나 심리치료가 아닙니다.<br>
+      힘들 때는 전문가의 도움을 먼저 받으세요.<br>
+      자살예방 상담전화 <a href="tel:109">109</a> · 정신건강 상담전화 <a href="tel:15770199">1577-0199</a> (24시간)
+    </div>
+  </main>
+</div>
+
+<nav class="tabs" aria-label="주요 메뉴">
+  <div class="inner" role="tablist">
+    <button class="tab" role="tab" data-tab="home" aria-selected="true"><span class="ti">🪷</span>마음</button>
+    <button class="tab" role="tab" data-tab="verse" aria-selected="false"><span class="ti">📜</span>구절</button>
+    <button class="tab" role="tab" data-tab="practice" aria-selected="false"><span class="ti">🧘</span>수행</button>
+    <button class="tab" role="tab" data-tab="record" aria-selected="false"><span class="ti">📅</span>기록</button>
+  </div>
+</nav>
+
+<div id="toast" role="status" aria-live="polite"><span id="toastMsg"></span><button id="toastAct" hidden></button></div>
+<button class="fab" id="sunimFab" aria-label="정우스님에게 물어보기"><img src="sunim/3_moktak.png" alt=""></button>
+<div id="modal-root"></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script>
+/* =========================================================
+   마음목탁 – 방하착  ·  index.html (단일 파일)
+   PRD.md v0.5 기준 · 개발 1.5단계까지: + Google 로그인·기기 간 동기화(필드 단위 병합)
+   - 저장: localStorage["maeummoktak_data"] (mindwork_data 사용 금지)
+   - Firebase 동기화는 1.5단계 (Firestore 경로 maeummoktak/{uid})
+   ========================================================= */
+
+/* ---------- 콘텐츠 상수 ---------- */
+const MOODS = [
+  {id:"anxious",  emo:"😟", label:"불안해요",           line:"불안은 앞날을 미리 걱정하는 마음이에요. 지금 이 숨 한 번으로 돌아와 볼까요?"},
+  {id:"angry",    emo:"😤", label:"화가 나요",          line:"화는 손님 같아서, 맞이하되 붙잡지 않아도 돼요."},
+  {id:"lonely",   emo:"🥺", label:"서운하고 외로워요",   line:"서운한 건 그만큼 마음을 썼다는 뜻이에요. 그 마음, 여기 잠깐 내려놓아요."},
+  {id:"low",      emo:"🌧️", label:"처지고 무기력해요",   line:"아무것도 하기 싫은 날도 있어요. 오늘은 아주 작은 것 하나면 충분해요."},
+  {id:"regret",   emo:"😔", label:"후회돼요",           line:"지난 일에 두 번째 화살을 쏘고 있진 않나요? 첫 번째 화살만으로도 충분히 아팠어요."},
+  {id:"compare",  emo:"👀", label:"자꾸 비교돼요",       line:"남의 자리 말고, 지금 내가 서 있는 자리를 한번 봐요."},
+  {id:"overthink",emo:"🌀", label:"생각이 많아요",       line:"생각은 구름 같아요. 붙잡지 않으면 흘러가요."},
+  {id:"meh",      emo:"😶", label:"그냥 그래요",         line:"그냥 그런 날도 좋은 날이에요. 차 한 잔 하듯 쉬어 가요."},
+  {id:"okay",     emo:"😌", label:"괜찮아요",           line:"괜찮은 오늘, 그 고요함을 충분히 누려요."}
+];
+const MOOD_BY_ID = Object.fromEntries(MOODS.map(m=>[m.id,m]));
+MOOD_BY_ID.crisis = {id:"crisis", emo:"🆘", label:"너무 힘들어요"};
+
+/* 마음별 짧은 수행 추천 (수행 탭은 2단계에서 열림) */
+const MOOD_PRACTICE = {
+  anxious:{ico:"🌬️",title:"1분 목탁 호흡",desc:"4초마다 '똑', 그 소리에 숨을 맞춰요",act:"breath"},
+  angry:{ico:"🌬️",title:"1분 목탁 호흡",desc:"대답하기 전에 숨 몇 번만",act:"breath"},
+  lonely:{ico:"💗",title:"자애 명상 3분",desc:"나에게, 소중한 사람에게 '편안하기를'",act:"metta"},
+  low:{ico:"🌬️",title:"1분 목탁 호흡",desc:"일어나기 힘들면 숨부터 천천히",act:"breath"},
+  regret:{ico:"💗",title:"자애 명상 3분",desc:"후회하는 나에게도 '편안하기를'",act:"metta"},
+  compare:{ico:"💗",title:"자애 명상 3분",desc:"부러운 그 사람에게도, 나에게도",act:"metta"},
+  overthink:{ico:"🌬️",title:"1분 목탁 호흡",desc:"생각 대신 '똑' 소리에 머물러요",act:"breath"},
+  meh:{ico:"🍵",title:"1분 목탁 호흡",desc:"차 한 잔 마시듯 잠깐 쉬어 가요",act:"breath"},
+  okay:{ico:"💗",title:"자애 명상 3분",desc:"괜찮은 마음을 누군가에게 나눠요",act:"metta"}
+};
+
+/* 목탁을 두드리면 피어오르는 글자 (U5) */
+const RISE_WORDS = ["쉼","괜찮아","지나가요","놓아요","숨","고요","천천히","여기","다정히","내려놓기"];
+
+/* 홈 말풍선 */
+const HOME_LINES = [
+  "목탁 한 번 두드리고, 지금 마음을 골라 봐요.",
+  "오늘 하루, 마음은 어떤 날씨였나요?",
+  "잠깐 멈춰도 괜찮아요. 똑, 한 번이면 돼요."
+];
+const RETURN_LINE = "다시 왔네요. 떠났다 돌아오는 것도 수행이에요.";
+
+/* 경전 구절 60개 — data/verses.js와 동일 (외부 AI 검수 + 원문 대조, 2026-11-13) */
+const VERSES = [{"id":"v01","text":"지나간 일을 쫓지 말고, 오지 않은 일을 미리 붙잡지 마세요. 지금 여기서 일어나는 것을 그대로 바라보세요.","source":"맛지마 니까야 131 『한밤의 슬기로운 자의 경(Bhaddekaratta Sutta)』","note":"지나간 과거와 오지 않은 미래에 흔들리지 마세요.","practice":"걱정이 떠오르면 '지금 이 순간 나는 무엇을 하고 있지?' 하고 물어보세요.","moods":["anxious"],"verified":true},{"id":"v02","text":"멈춰 서지도 않고 허우적대지도 않았기에 나는 거센 물을 건널 수 있었다.","source":"상윳따 니까야 1:1 『거센 물 건너기 경(Oghatarana Sutta)』","note":"치우치지 않는 마음이 거센 불안을 건너게 합니다.","practice":"불안할 때 너무 버티지도, 너무 애쓰지도 말고 숨 한 번에 한 걸음만.","moods":["anxious"],"verified":true},{"id":"v03","text":"길게 들이쉴 때는 길게 들이쉬는 줄 알고, 짧게 내쉴 때는 짧게 내쉬는 줄 압니다.","source":"맛지마 니까야 118 『호흡 마음챙김 경(Anapanasati Sutta)』","note":"호흡을 알아차리는 것만으로도 마음이 차분해집니다.","practice":"숨을 바꾸려 하지 말고, 지금 숨이 긴지 짧은지만 세 번 알아차려 보세요.","moods":["anxious"],"verified":true},{"id":"v04","text":"지나간 마음도 붙잡을 수 없고, 지금의 마음도 붙잡을 수 없고, 오지 않은 마음도 붙잡을 수 없다.","source":"금강경 제18 「일체동관분(一切同觀分)」","note":"과거·현재·미래의 마음은 고정되어 있지 않습니다.","practice":"붙잡을 수 없는 걱정이라면, 잠시 손을 펴 보세요.","moods":["anxious"],"verified":true},{"id":"v05","text":"모든 만들어진 것은 변해 간다는 것을 지혜로 볼 때, 괴로움에서 멀어진다.","source":"법구경(담마빠다) 277게송","note":"세상의 모든 것은 변하기에 지금의 아픔도 지나갑니다.","practice":"지금의 불안도 '변해 가는 것' 중 하나라고 이름 붙여 보세요.","moods":["anxious"],"verified":true},{"id":"v06","text":"스스로를 섬으로 삼고 자신에게 의지하라. 진리를 섬으로 삼고 진리에 의지하라.","source":"디가 니까야 16 『대반열반경(Mahaparinibbana Sutta)』","note":"흔들릴 때는 오직 나 자신과 진리를 의지처로 삼으세요.","practice":"흔들릴 때 내가 기댈 수 있는 나의 작은 습관 하나를 떠올려 보세요.","moods":["anxious"],"verified":true},{"id":"v07","text":"부지런함과 성실함, 절제와 다스림으로 지혜로운 이는 홍수도 덮치지 못하는 섬을 만든다.","source":"법구경(담마빠다) 25게송","note":"스스로 다스리는 마음이 어떤 폭풍우에도 안전한 섬이 됩니다.","practice":"오늘 나만의 작은 '섬'(산책, 차 한 잔)을 하나 만들어 보세요.","moods":["anxious"],"verified":true},{"id":"v08","text":"미움은 미움으로 그치지 않는다. 미움을 내려놓을 때에야 그친다. 이것은 오래된 진리다.","source":"법구경(담마빠다) 5게송","note":"원망을 품을수록 내 마음만 다칩니다.","practice":"떠오르는 미움에 '아, 미움이 왔네' 하고 이름만 붙여 보세요.","moods":["angry"],"verified":true},{"id":"v09","text":"'그가 나를 욕했다, 나를 이겼다, 내 것을 빼앗았다' 이런 생각을 품는 사람의 원한은 가라앉지 않는다. 품지 않는 사람의 원한은 가라앉는다.","source":"법구경(담마빠다) 3~4게송","note":"생각을 놓아줄 때 비로소 마음의 불이 꺼집니다.","practice":"같은 장면을 몇 번째 다시 재생하고 있는지 세어 보세요.","moods":["angry"],"verified":true},{"id":"v10","text":"손님이 차려 준 음식을 먹지 않으면 그 음식은 차린 사람의 것으로 남는다. 내가 받지 않은 욕도 그렇다.","source":"상윳따 니까야 7:2 『욕설 경(Akkosa Sutta)』","note":"상대의 거친 말을 내가 굳이 받아들일 필요는 없습니다.","practice":"오늘 들은 거친 말, 받지 않고 상대에게 돌려 두기로 해요.","moods":["angry"],"verified":true},{"id":"v11","text":"화내지 않음으로 화를 이기고, 선함으로 악함을 이기고, 베풂으로 인색함을 이기고, 진실로 거짓을 이겨라.","source":"법구경(담마빠다) 223게송","note":"가장 지혜로운 승리는 선함과 평정심을 지키는 것입니다.","practice":"화가 날 때 대답을 10초 늦춰 보세요.","moods":["angry"],"verified":true},{"id":"v12","text":"어떤 이의 화는 바위에 새긴 글씨처럼 오래가고, 어떤 이는 모래에, 어떤 이는 물 위에 쓴 글씨처럼 금세 사라진다.","source":"앙굿따라 니까야 3:132 「새김 경(Lekha Sutta)」","note":"지나간 화를 물 위에 쓴 글씨처럼 흘려보내세요.","practice":"지금 내 화는 바위, 모래, 물 중 어디에 쓰이고 있나요?","moods":["angry"],"verified":true,"review":"경 번호가 판본마다 다름(3:130~3:134). 최종 배포 전 한 번 더 확인"},{"id":"v13","text":"말을 할 때는 때에 맞는지, 사실인지, 부드러운지, 이로운지, 자애로운 마음에서 나왔는지 돌아보라.","source":"맛지마 니까야 21 『톱의 비유 경(Kakacupama Sutta)』 중 발췌","note":"거친 마음으로 뱉은 말은 결국 나를 다치게 합니다.","practice":"보내기 전 메시지를 이 다섯 가지로 한 번 걸러 보세요.","moods":["angry"],"verified":true},{"id":"v14","text":"이긴 사람은 원한을 낳고, 진 사람은 괴로움 속에 눕는다. 이기고 지는 것을 내려놓은 이는 평화롭게 잠든다.","source":"법구경(담마빠다) 201게송","note":"모든 싸움에서 이길 필요는 없습니다. 내려놓음이 곧 평화입니다.","practice":"오늘 꼭 이겨야 하는 싸움인지 한 번 물어보세요.","moods":["angry"],"verified":true},{"id":"v15","text":"좋은 벗과 함께하는 것은 거룩한 삶(수행)의 절반이 아니라 전부입니다.","source":"상윳따 니까야 45:2 『절반 경(Upaddha Sutta)』","note":"좋은 인연과 따뜻한 소통은 외로움을 녹이는 전부입니다.","practice":"오늘 마음 편한 사람 한 명에게 짧은 안부를 보내 보세요.","moods":["lonely"],"verified":true},{"id":"v16","text":"마음으로 온 세상을 다 찾아보아도 자기보다 더 사랑스러운 이는 없다. 다른 이들도 저마다 자기를 그렇게 아낀다.","source":"우다나 5:1 『더 사랑스러운 이 경(Piyatara Sutta)』","note":"누구보다 먼저 자기 자신을 따뜻하게 아껴주세요.","practice":"서운한 마음의 나에게 먼저 다정한 말 한마디를 건네 보세요.","moods":["lonely"],"verified":true},{"id":"v17","text":"살아 있는 모든 것이 행복하고 편안하기를. 어머니가 하나뿐인 자식을 지키듯 모든 존재에게 한없는 마음을 내기를.","source":"숫타니파타 1:8 『자애경(Metta Sutta)』","note":"따뜻한 자애의 마음은 외로운 마음을 포근하게 감싸줍니다.","practice":"'나도, 너도 편안하기를' 세 번 속으로 말해 보세요.","moods":["lonely"],"verified":true},{"id":"v18","text":"무소의 뿔처럼 혼자서 가라.","source":"숫타니파타 1:3 「무소의 뿔 경(Khaggavisana Sutta)」 각 게송의 후렴","note":"혼자 있는 시간은 외로움이 아니라 온전히 나와 만나는 소중한 시간입니다.","practice":"혼자인 시간을 '나와 함께 있는 시간'이라고 바꿔 불러 보세요.","moods":["lonely"],"verified":true,"review":"검수 AI가 바꾼 문장(좋은 벗을 못 만나면 홀로 가라)은 외로운 사용자에게 차갑고 v15와 충돌 → 모든 게송에 반복되는 후렴만 사용"},{"id":"v19","text":"소리에 놀라지 않는 사자처럼, 그물에 걸리지 않는 바람처럼, 진흙에 물들지 않는 연꽃처럼 가라.","source":"숫타니파타 1:3 「무소의 뿔 경」 중 사자·바람·연꽃 게송","note":"세상의 소란스러움 속에서도 흔들리지 않는 내 중심을 지키세요.","practice":"오늘 나를 흔든 소리 하나를 바람처럼 지나가게 두어요.","moods":["lonely"],"verified":true},{"id":"v20","text":"사랑하는 것에서 슬픔이 생기고, 사랑하는 것에서 두려움이 생긴다. 사랑에서 벗어난 이에게 슬픔이 없거늘 어찌 두려움이 있으랴.","source":"법구경(담마빠다) 212게송","note":"마음을 깊이 썼기에 아픔도 찾아오는 법입니다. 그 마음을 먼저 다독여주세요.","practice":"서운함은 내가 그만큼 아꼈다는 뜻이기도 해요. 그 마음을 먼저 인정해 주세요.","moods":["lonely"],"verified":true,"review":"후반부(사랑에서 벗어난 이…)를 붙인 원문 그대로 사용. 해설·실천 문구가 차갑게 읽히지 않게 보완함"},{"id":"v21","text":"이 마음은 본래 밝고 맑습니다. 다만 바깥에서 찾아온 흐린 먼지에 잠시 가려졌을 뿐입니다.","source":"앙굿따라 니까야 1:49~52 (AN 1.49-52) 『빛나는 마음의 경』","note":"지금의 무거움은 잠시 스쳐 가는 먼지일 뿐, 내 본래 마음이 아닙니다.","practice":"지금의 무거움은 '손님 먼지'일 뿐, 내가 아니에요.","moods":["low"],"verified":true},{"id":"v22","text":"깨어 있어라. 게으르지 말고 바른 길을 가라. 바른 길을 걷는 이는 이 세상에서도 저 세상에서도 편안하다.","source":"법구경(담마빠다) 168게송","note":"거창한 시작이 아니라, 작은 깨어 있음이 편안함을 줍니다.","practice":"일어나기 힘들면 손가락부터, 그다음 발가락부터 움직여 봐요.","moods":["low"],"verified":true,"review":"'일어나라'를 '깨어 있어라'로 순화한 번역. 원어 appamāda(방일하지 않음)의 뜻 범위 안이라 수용"},{"id":"v23","text":"'이 작은 선이 무슨 소용이랴' 하고 가볍게 여기지 마라. 물방울이 모여 물항아리를 채우듯, 작은 선이 쌓여 사람을 채운다.","source":"법구경(담마빠다) 122게송","note":"작은 정성과 행동이 모여 마음을 다시 채워줍니다.","practice":"오늘 할 수 있는 아주 작은 일 하나만 해요. 물 한 잔 마시기도 좋아요.","moods":["low"],"verified":true},{"id":"v24","text":"맑은 마음으로 말하고 행동하면 행복이 그를 따른다. 그림자가 몸을 떠나지 않듯이.","source":"법구경(담마빠다) 2게송","note":"선한 마음과 가벼운 행동은 언제나 나를 따라옵니다.","practice":"지금 할 수 있는 맑은 행동 하나: 창문 열기.","moods":["low"],"verified":true},{"id":"v25","text":"울고 슬퍼한다고 마음의 평화가 오지는 않는다. 오히려 마음만 더 괴로워질 뿐, 박힌 화살을 뽑아야 편안해진다.","source":"숫타니파타 3:8 『화살 경(Salla Sutta)』","note":"슬픔을 밀어내지 않되, 그 안에 오래 갇히지 않도록 박힌 화살을 함께 살펴봐요.","practice":"오늘의 화살을 '털어놓기'에 적어 뽑아 보세요.","moods":["low"],"verified":true,"review":"검수 AI의 해설 '슬픔을 참지 말고'가 본문(운다고 평화가 오지 않는다)과 엇갈려 조정"},{"id":"v26","text":"건강은 가장 큰 이익, 만족은 가장 큰 재산, 믿음은 가장 좋은 친척, 열반은 가장 큰 행복.","source":"법구경(담마빠다) 204게송","note":"이미 내 안에 있는 만족과 건강을 돌아보세요.","practice":"오늘 이미 가진 것 세 가지를 떠올려 보세요.","moods":["low"],"verified":true},{"id":"v27","text":"스스로를 지킴으로써 남을 지키고, 남을 지킴으로써 스스로를 지킨다.","source":"상윳따 니까야 47:19 『곡예사 경(Sedaka Sutta)』","note":"나를 돌보는 것은 이기적인 일이 아니라 모두를 위한 시작입니다.","practice":"나를 돌보는 것도 이기적인 게 아니에요. 오늘 나를 위한 일 하나.","moods":["low"],"verified":true},{"id":"v28","text":"전에 지은 잘못이라도 나중에 선한 행동으로 덮는 이는, 구름에서 벗어난 달처럼 이 세상을 비춘다.","source":"법구경(담마빠다) 173게송","note":"지나간 잘못보다 지금의 좋은 마음이 더 환하게 빛납니다.","practice":"후회되는 일 대신 오늘 할 수 있는 따뜻한 일 하나를 적어 보세요.","moods":["regret"],"verified":true},{"id":"v29","text":"전에는 게을렀어도 이제 게으르지 않은 이는, 구름에서 벗어난 달처럼 이 세상을 비춘다.","source":"법구경(담마빠다) 172게송","note":"언제든 다시 시작할 수 있습니다. 지금이 바로 그 순간입니다.","practice":"'전에는'은 이미 지나갔어요. '이제'부터 한 걸음.","moods":["regret"],"verified":true,"review":"검수 AI가 'ok'로 두고 '그릇되었어도'를 덧붙임 → 173게송(v28) 내용과 겹치고 172게송 원문에 없어 원래 풀이로 복원"},{"id":"v30","text":"거울을 보듯, 행동하기 전에, 하는 동안, 한 뒤에 스스로를 돌아보아라. 잘못이 있다면 털어놓고 다음에는 삼가면 된다.","source":"맛지마 니까야 61 『암발랏티카에서 라훌라에게 주신 가르침(Ambalatthika-rahulovada Sutta)』","note":"실수를 자책하는 대신 투명하게 바라보고 나아가세요.","practice":"잘못을 '돌아보기 → 털어놓기 → 다음엔'의 세 줄로 정리해 보세요.","moods":["regret"],"verified":true},{"id":"v31","text":"앞의 것도 놓고, 뒤의 것도 놓고, 가운데 것도 놓아라. 모든 것에서 벗어날 때, 저 언덕으로 건너간다.","source":"법구경(담마빠다) 348게송","note":"과거, 미래, 현재의 짐을 모두 내려놓을 때 비로소 평화가 찾아옵니다.","practice":"후회라는 짐, 오늘 하루만 내려놓아 볼까요? (방하착)","moods":["regret"],"verified":true},{"id":"v32","text":"어떤 스님이 '한 물건도 가져오지 않았는데 무엇을 내려놓습니까?' 하니, 조주 선사가 '그럼 짊어지고 가거라' 했다.","source":"『조주록(趙州錄)』 / 『오등회원(五燈會元)』 선어록 일화","note":"'방하착'은 '내려놓아라'라는 뜻이에요. 이 앱 이름도 여기서 왔어요.","practice":"내가 '아무것도 안 쥐고 있다'고 우기는 무거운 것이 있나요?","moods":["regret"],"verified":true},{"id":"v33","text":"나쁜 일은 짓지 말고, 좋은 일을 받들어 행하고, 스스로 마음을 맑게 하라. 이것이 모든 부처님의 가르침이다.","source":"법구경(담마빠다) 183게송 (칠불통계게)","note":"복잡한 생각은 내려놓고 오늘 할 수 있는 선한 마음 하나만 챙기세요.","practice":"오늘 할 '좋은 일' 하나만 정해요. 지난 일은 그 다음이에요.","moods":["regret"],"verified":true},{"id":"v34","text":"보통 사람은 아픈 일을 겪으면 스스로 두 번째 화살을 쏜다. 지혜로운 이는 첫 번째 화살만 맞는다.","source":"상윳따 니까야 36:6 『화살 경(Sallatha Sutta)』","note":"일어난 일(첫 번째 화살)에 자책(두 번째 화살)을 더하지 마세요.","practice":"지금 아픈 건 일어난 일인가요, 내가 다시 쏘는 화살인가요?","moods":["regret"],"verified":true,"review":"'어리석은 이'는 후회 중인 사용자에게 자책을 줄 수 있음 → 원어(배우지 못한 범부)의 뜻을 살려 '보통 사람'으로"},{"id":"v35","text":"남의 허물이나 남이 한 일, 하지 않은 일을 보지 말고, 오직 내가 한 일과 하지 않은 일을 살펴보라.","source":"법구경(담마빠다) 50게송","note":"남의 시선과 삶을 기웃거리는 대신 내 마음에 집중하세요.","practice":"오늘 SNS 대신 내가 한 일 세 가지를 적어 보세요.","moods":["compare"],"verified":true},{"id":"v36","text":"말이 없어도 비난받고, 말이 많아도 비난받고, 적당히 말해도 비난받는다. 세상에 비난만 받거나 칭찬만 받는 사람은 예전에도 없었고 앞으로도 없다.","source":"법구경(담마빠다) 227~228게송","note":"모든 사람에게 좋은 사람이 되려 애쓰지 않아도 괜찮습니다.","practice":"모두에게 좋은 평가를 받는 사람은 원래 없어요.","moods":["compare"],"verified":true},{"id":"v37","text":"단단한 바위가 바람에 흔들리지 않듯, 지혜로운 이는 칭찬과 비난에 흔들리지 않는다.","source":"법구경(담마빠다) 81게송","note":"타인의 평가는 바람일 뿐, 내 중심은 흔들리지 않습니다.","practice":"오늘 들은 칭찬과 비난, 둘 다 바람이라고 불러 보세요.","moods":["compare"],"verified":true},{"id":"v38","text":"어디에 있든 스스로 주인이 되면, 지금 서 있는 그 자리가 참된 자리가 된다.","source":"임제록 『수처작주 입처개진(隨處作主 立處皆眞)』","note":"남의 자리를 부러워 말고 내 자리의 주인이 되어보세요.","practice":"남의 자리 말고 내 자리에서 할 수 있는 것 하나.","moods":["compare"],"verified":true},{"id":"v39","text":"지극한 도는 어렵지 않다. 다만 '더 낫다, 못하다' 하고 고르고 가리는 마음을 멀리할 뿐이다.","source":"승찬(僧璨) 선사 『신심명(信心銘)』","note":"비교하고 재단하는 마음을 놓아버릴 때 평안이 찾아옵니다.","practice":"'더 낫다/못하다' 저울질을 잠시 내려놓아 봐요.","moods":["compare"],"verified":true},{"id":"v40","text":"전쟁터에서 백만 명을 이기는 것보다, 오직 자기 자신 하나를 이기는 사람이 가장 훌륭한 승리자다.","source":"법구경(담마빠다) 103게송","note":"남과 비교하며 지칠 때, 오직 어제의 나를 이기는 것에 집중하세요.","practice":"비교할 대상은 어제의 나 한 명이면 충분해요.","moods":["compare"],"verified":true},{"id":"v41","text":"볼 때는 보이는 것만, 들을 때는 들리는 것만 있게 하라.","source":"우다나 1:10 『바히야 경(Bahiya Sutta)』","note":"잡념이 밀려올 때는 지금 감각에만 머물러 보세요.","practice":"지금 눈에 보이는 것 다섯 가지를 이름만 불러 보세요.","moods":["overthink"],"verified":true,"review":"검수 AI가 'ok'로 두고 '생각에 생각을 얹지 마라'를 덧붙임 → 바히야 경 원문에 없어 삭제"},{"id":"v42","text":"무엇이든 자주 생각하고 곰곰이 떠올리면 마음은 자연히 그쪽으로 기울기 마련이다.","source":"맛지마 니까야 19 『두 갈래 생각 경(Dvedhavitakka Sutta)』","note":"내가 어떤 생각에 오래 머물고 있는지 살펴보세요.","practice":"오늘 자주 떠올릴 생각을 내가 골라 보세요.","moods":["overthink"],"verified":true},{"id":"v43","text":"솜씨 좋은 목수가 가는 쐐기로 굵은 쐐기를 밀어내듯, 해로운 생각은 이로운 생각으로 밀어낸다.","source":"맛지마 니까야 20 『생각을 가라앉히는 경(Vitakkasanthana Sutta)』","note":"불안한 생각은 고마운 생각으로 부드럽게 밀어내 보세요.","practice":"걱정 하나에 감사 하나를 '쐐기'로 끼워 보세요.","moods":["overthink"],"verified":true,"review":"'굵은 말뚝'은 원문 비유(쐐기로 쐐기를 빼냄)와 달라 초안 표현으로 복원"},{"id":"v44","text":"바람에 일렁이는 물에는 얼굴이 비치지 않듯, 들뜬 마음에는 진실한 모습이 보이지 않는다.","source":"앙굿따라 니까야 5:193 『상가라와 경(Sangarava Sutta)』 비유구","note":"생각이 멈출 때 비로소 내 마음의 참모습이 보입니다.","practice":"물결이 가라앉도록 숨 세 번만 기다려요.","moods":["overthink"],"verified":true},{"id":"v45","text":"마음은 흔들리고 들뜨며 지키기 어렵다. 화살 만드는 이가 화살을 곧게 펴듯, 지혜로운 이는 마음을 곧게 다잡는다.","source":"법구경(담마빠다) 33게송","note":"마음이 흔들리는 것은 당연합니다. 다시 곧게 펴면 됩니다.","practice":"흔들리는 게 마음의 원래 모습이에요. 다시 곧게 펴면 돼요.","moods":["overthink"],"verified":true},{"id":"v46","text":"강을 건넜으면 뗏목을 머리에 이고 다니지 않는다. 가르침과 생각도 강을 건너기 위한 것이지 붙잡기 위한 것이 아니다.","source":"맛지마 니까야 22 『뱀의 비유 경(Alagaddupama Sutta)』 뗏목의 비유","note":"이미 지난 생각과 집착은 그저 내려놓으세요.","practice":"쓸모를 다한 생각, 뗏목처럼 강가에 두고 와요.","moods":["overthink"],"verified":true},{"id":"v47","text":"독화살을 맞은 사람이 '누가 쐈는지, 활은 무엇인지' 다 알기 전엔 화살을 뽑지 않겠다고 하면 그 사이에 죽고 만다.","source":"맛지마 니까야 63 『말룽꺄의 짧은 경(Culamalunkya Sutta)』 독화살의 비유","note":"답이 안 나오는 생각에 갇혀 지금의 고통을 키우지 마세요.","practice":"답이 안 나오는 질문은 잠시 두고, 지금 아픈 곳부터 돌봐요.","moods":["overthink"],"verified":true},{"id":"v48","text":"날마다 좋은 날.","source":"『벽암록』 제6칙 (운문 선사 공안) 『일일시호일(日日是好日)』","note":"특별한 일이 없어도, 오늘 하루는 그 자체로 좋은 날입니다.","practice":"특별할 것 없는 오늘에서 괜찮았던 순간 하나를 찾아봐요.","moods":["meh"],"verified":true},{"id":"v49","text":"평소의 마음이 곧 길이다.","source":"『무문관』 제19칙 『평상심시도(平常心是道)』","note":"특별하지 않은 오늘의 마음도 소중한 길 위에 있어요.","practice":"오늘의 '그냥 그런' 마음도 길 위에 있어요.","moods":["meh"],"verified":true,"review":"본문에 붙은 해석 문장('특별하지 않은 평범한 마음이…')은 원문이 아니라 해설로 옮김"},{"id":"v50","text":"어떤 이가 오든 조주 선사는 '차나 한 잔 마시고 가게'라고 했다.","source":"『조주록(趙州錄)』 『끽다거(喫茶去)』","note":"복잡할 것 없습니다. 따뜻한 차 한 잔 마시며 쉬어 가세요.","practice":"정말로 차 한 잔 마시며 3분만 쉬어요.","moods":["meh"],"verified":true},{"id":"v51","text":"모든 것은 마음에 앞서고, 마음이 주인이며, 마음이 모든 것을 지어낸다.","source":"법구경(담마빠다) 1게송","note":"심심한 마음에도 가만히 따뜻한 불을 지펴보세요.","practice":"'그냥 그래요'를 '그냥 그래서 편안해요'로 바꿔 말해 보기.","moods":["meh"],"verified":true},{"id":"v52","text":"어디에도 마음을 머물게 하지 말고, 그 청정한 마음을 내어라.","source":"금강경 제10 장엄정토분 『응무소주 이생기심(應無所住 而生其心)』","note":"무언가에 얽매이지 않는 가벼운 마음을 누려보세요.","practice":"오늘은 아무 데도 매이지 않은 가벼운 마음으로.","moods":["meh"],"verified":true},{"id":"v53","text":"사람들이 땅 위에 깨끗한 것을 버리든 더러운 침과 오물을 뱉든, 땅은 싫어하거나 부끄러워하지 않는다. 땅처럼 마음을 닦아라.","source":"맛지마 니까야 62 『라훌라를 가르치신 긴 경(Maharahulovada Sutta)』","note":"무심하고 묵묵하게 내 자리를 지켜보세요.","practice":"좋은 일도 싫은 일도 땅처럼 받아 주기.","moods":["meh"],"verified":true},{"id":"v54","text":"세상의 온갖 일에 부딪혀도 마음이 흔들리지 않고, 슬픔 없이 맑고 편안한 것, 이것이 가장 큰 축복이다.","source":"숫타니파타 2:4 『길상경(Mangala Sutta)』","note":"지금 찾아온 평온과 잔잔함을 온전히 누려보세요.","practice":"지금의 괜찮음을 잠시 충분히 느껴 보세요.","moods":["okay"],"verified":true},{"id":"v55","text":"존중과 겸손, 만족과 감사, 때맞춰 진리를 가까이하는 것, 이것이 가장 큰 축복이다.","source":"숫타니파타 2:4 『길상경(Mangala Sutta)』","note":"소소한 일상 속 감사가 평안을 더욱 단단하게 만들어 줍니다.","practice":"오늘 고마운 사람 한 명을 떠올려 보세요.","moods":["okay"],"verified":true},{"id":"v56","text":"미워하는 이들 사이에서도 미움 없이, 우리는 참으로 행복하게 살아가자.","source":"법구경(담마빠다) 197게송","note":"마음이 평안한 오늘, 그 따뜻함을 주변에도 흘려보내 주세요.","practice":"괜찮은 오늘, 그 여유를 누군가에게 조금 나눠 줘요.","moods":["okay"],"verified":true},{"id":"v57","text":"자애로운 마음을 닦으면 편히 잠들고, 편히 깨어나며, 나쁜 꿈을 꾸지 않고 사랑받게 된다.","source":"앙굿따라 니까야 11:16 「자애 공덕 경(Mettanisamsa Sutta)」","note":"따뜻하고 편안한 마음으로 하루를 마무리하세요.","practice":"잠들기 전 '모두 편안하기를' 한 번 속으로 빌어보기.","moods":["okay"],"verified":true,"review":"경 번호가 판본마다 11:15 / 11:16으로 다름. 배포 전 재확인"},{"id":"v58","text":"만들어진 모든 것은 사라져 간다. 방심하지 말고 부지런히 정진하라.","source":"디가 니까야 16 『대반열반경(Mahaparinibbana Sutta)』 부처님 유언","note":"지금 누리는 이 평온한 순간도 소중하기에 더욱 아름답습니다.","practice":"좋은 날도 지나가요. 그래서 지금이 더 소중해요.","moods":["okay"],"verified":true},{"id":"v59","text":"세상의 모든 것은 오직 마음이 지어내는 것이다.","source":"대방광불화엄경(80권본) 야마천궁게찬품 『일체유심조(一切唯心造)』","note":"세상을 바라보는 창을 조금만 바꾸면 전혀 다른 풍경이 펼쳐집니다.","practice":"같은 일도 마음에 따라 다르게 보여요.","moods":["common"],"verified":true},{"id":"v60","text":"모든 만들어진 것은 꿈 같고, 환상 같고, 물거품 같고, 그림자 같으며, 이슬 같고, 번개 같으니 이렇게 관찰하라.","source":"금강경 제32 응화비진분","note":"지나쳐 가는 수많은 생각과 걱정도 물거품처럼 가볍게 흘려보내세요.","practice":"오늘 붙잡은 생각 하나를 물거품처럼 바라봐요.","moods":["common"],"verified":true}];
+const VERSE_BY_ID = Object.fromEntries(VERSES.map(v=>[v.id,v]));
+
+/* ---------- 상태 (PRD §8-4) ---------- */
+const STORE_KEY = "maeummoktak_data";
+const DEFAULT_STATE = () => ({
+  version:1, updatedAt:0,
+  settings:{userName:"",startDate:null,onboardingDone:false,safetyAck:false,
+    enabledFeatures:["verse","practice","reflect","calendar","learn"],
+    sound:true,vibrate:true,reduceMotion:false,theme:"light",seenTips:[],lastVisit:null,hiddenResume:[]},
+  moods:[], reflections:[], practices:[], savedVerses:[], savedMeta:{},
+  lessons:{completed:[],memos:{}}, stickers:[], moktak:{}, deletedIds:[]
+});
+let S;
+function load(){
+  const base = DEFAULT_STATE();
+  try{
+    const raw = localStorage.getItem(STORE_KEY);
+    if(!raw) return base;
+    const d = JSON.parse(raw);
+    // 필드 추가에 안전한 병합: 기본값 위에 저장값을 얹는다 (기존 데이터 삭제 없음)
+    const st={...base, ...d, settings:{...base.settings, ...(d.settings||{})}, lessons:{...base.lessons, ...(d.lessons||{})}};
+    // 담아 둔 구절 시각 기록이 없던 이전 데이터 이전(마이그레이션)
+    st.savedMeta=st.savedMeta||{}; st.savedVerses.forEach((id,i)=>{ if(st.savedMeta[id]==null) st.savedMeta[id]=1+i; });
+    return st;
+  }catch(e){ console.warn("load 실패", e); return base; }
+}
+function save(){
+  S.updatedAt = Date.now();
+  try{ localStorage.setItem(STORE_KEY, JSON.stringify(S)); }catch(e){ console.warn("save 실패", e); }
+  scheduleCloudPush();
+}
+function persistLocal(){ try{ localStorage.setItem(STORE_KEY, JSON.stringify(S)); }catch(e){ console.warn("save 실패", e); } }
+let saveTimer=null;
+function saveSoon(){ clearTimeout(saveTimer); saveTimer=setTimeout(save,400); }
+
+/* ---------- 유틸 ---------- */
+const $ = s => document.querySelector(s);
+const esc = s => String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const pad = n => String(n).padStart(2,"0");
+function todayStr(d=new Date()){ return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
+const uid = p => `${p}_${Date.now()}${Math.random().toString(36).slice(2,6)}`;
+const pick = a => a[Math.floor(Math.random()*a.length)];
+function hashStr(s){ let h=0; for(const c of s) h=(h*31+c.charCodeAt(0))|0; return Math.abs(h); }
+function reduceMotion(){ return S.settings.reduceMotion || matchMedia("(prefers-reduced-motion: reduce)").matches; }
+
+let toastTimer=null;
+function toast(msg, action){ // action: {label, fn}
+  const t=$("#toast"), b=$("#toastAct");
+  $("#toastMsg").textContent=msg;
+  if(action){ b.hidden=false; b.textContent=action.label; b.onclick=()=>{ action.fn(); hideToast(); }; }
+  else b.hidden=true;
+  t.classList.add("show");
+  clearTimeout(toastTimer); toastTimer=setTimeout(hideToast, action?5000:2400);
+}
+function hideToast(){ $("#toast").classList.remove("show"); }
+
+/* ---------- 모달 ---------- */
+function openModal(html,{center=false,dismissable=true,onClose}={}){
+  const root=$("#modal-root");
+  root.innerHTML=`<div class="overlay${center?" center":""}" role="dialog" aria-modal="true"><div class="sheet">${center?"":'<div class="sheet-handle"></div>'}${html}</div></div>`;
+  const ov=root.firstElementChild;
+  ov._onClose=onClose;
+  if(dismissable) ov.addEventListener("click",e=>{ if(e.target===ov) closeModal(); });
+  document.body.style.overflow="hidden";
+  return ov;
+}
+function closeModal(){
+  const ov=$("#modal-root").firstElementChild;
+  if(ov && ov._onClose) ov._onClose();
+  $("#modal-root").innerHTML=""; document.body.style.overflow="";
+}
+document.addEventListener("keydown",e=>{ if(e.key==="Escape" && !$("#modal-root .overlay[data-locked]")) closeModal(); });
+
+/* ---------- 탭 라우팅 ---------- */
+function showTab(name){
+  document.querySelectorAll(".screen").forEach(s=>s.classList.toggle("active", s.id==="screen-"+name));
+  document.querySelectorAll(".tab").forEach(t=>t.setAttribute("aria-selected", t.dataset.tab===name));
+  if(name==="verse") renderVerseTab();
+  if(name==="practice"){ renderPracticeSum(); showTip("practice_start",document.querySelector("#screen-practice .min-btns")); }
+  if(name==="record" && featOn("calendar")) showTip("calendar",$("#calendar"));
+  if(name==="home") renderResume();
+  if(name==="record") renderRecord();
+  window.scrollTo({top:0, behavior: reduceMotion()?"auto":"smooth"});
+}
+document.querySelectorAll(".tab").forEach(t=>t.addEventListener("click",()=>showTab(t.dataset.tab)));
+document.addEventListener("click",e=>{ const g=e.target.closest("[data-goto]"); if(g){ closeModal(); showTab(g.dataset.goto); } });
+
+/* ---------- 소리·진동 (U4) ---------- */
+let audioCtx=null;
+function knock(){
+  if(!S.settings.sound) return;
+  try{
+    audioCtx = audioCtx || new (window.AudioContext||window.webkitAudioContext)();
+    const t=audioCtx.currentTime, out=audioCtx.createGain();
+    out.gain.value=.55; out.connect(audioCtx.destination);
+    // 나무 울림: 낮은 몸통음 + 짧은 높은 타격음
+    [[410,.32,"sine",.9],[820,.12,"triangle",.35],[1720,.05,"sine",.18]].forEach(([f,len,type,vol])=>{
+      const o=audioCtx.createOscillator(), g=audioCtx.createGain();
+      o.type=type; o.frequency.setValueAtTime(f*1.06,t); o.frequency.exponentialRampToValueAtTime(f,t+.03);
+      g.gain.setValueAtTime(vol,t); g.gain.exponentialRampToValueAtTime(.0001,t+len);
+      o.connect(g); g.connect(out); o.start(t); o.stop(t+len+.02);
+    });
+  }catch(e){}
+}
+function buzz(ms=40){ if(S.settings.vibrate && navigator.vibrate) navigator.vibrate(ms); }
+
+/* ---------- 두드리는 목탁 (U5) ---------- */
+const MOKTAK_MAX = 108;
+let gifTimer=null;
+function moktakToday(){ return S.moktak[todayStr()]||0; }
+function renderMoktakCount(){ $("#moktakCount").textContent = moktakToday(); }
+function playMoktakGif(){
+  const img=$("#moktakImg");
+  if(reduceMotion()) return;
+  if(!gifTimer){ img.src="sunim/moktak_anim.gif?t="+Date.now(); }
+  clearTimeout(gifTimer);
+  gifTimer=setTimeout(()=>{ img.src="sunim/moktak_still.png"; gifTimer=null; },1650);
+}
+function floatWord(){
+  if(reduceMotion()) return;
+  const w=document.createElement("span");
+  w.className="float-word"; w.textContent=pick(RISE_WORDS);
+  w.style.marginLeft=(Math.random()*30-15)+"px";
+  $("#moktakBtn").appendChild(w);
+  setTimeout(()=>w.remove(),1450);
+}
+function tapMoktak(){
+  knock(); buzz(35); floatWord(); playMoktakGif();
+  const b=$("#moktakBtn"); b.classList.add("bump"); setTimeout(()=>b.classList.remove("bump"),120);
+  const d=todayStr(), before=S.moktak[d]||0;
+  if(before<MOKTAK_MAX){
+    S.moktak[d]=before+1; renderMoktakCount(); saveSoon();
+    if(before+1===MOKTAK_MAX) setBubble("오늘의 108번, 잘 두드렸어요. 마음이 조금 가벼워졌길 바라요.");
+  }
+}
+(function bindMoktak(){
+  const b=$("#moktakBtn"); let pressT=null, longFired=false;
+  const start=e=>{ if(e.button>0) return; longFired=false; pressT=setTimeout(()=>{ longFired=true; buzz(60); openBreath(); },650); };
+  const end=()=>{ clearTimeout(pressT); };
+  b.addEventListener("pointerdown",start);
+  b.addEventListener("pointerup",end); b.addEventListener("pointerleave",end); b.addEventListener("pointercancel",end);
+  b.addEventListener("click",e=>{ if(longFired){ e.preventDefault(); longFired=false; return; } tapMoktak(); });
+  b.addEventListener("contextmenu",e=>e.preventDefault());
+})();
+
+/* ---------- 호흡 세션: 1분 목탁 호흡 / 호흡 바라보기 (U5, F4) ---------- */
+let breathTimers=[];
+function chime(){
+  if(!S.settings.sound) return;
+  try{
+    audioCtx = audioCtx || new (window.AudioContext||window.webkitAudioContext)();
+    const t=audioCtx.currentTime;
+    [[880,.22],[1320,.09],[1760,.05]].forEach(([f,vol])=>{
+      const o=audioCtx.createOscillator(), g=audioCtx.createGain();
+      o.type="sine"; o.frequency.value=f;
+      g.gain.setValueAtTime(.0001,t); g.gain.exponentialRampToValueAtTime(vol,t+.02); g.gain.exponentialRampToValueAtTime(.0001,t+1.8);
+      o.connect(g); g.connect(audioCtx.destination); o.start(t); o.stop(t+1.9);
+    });
+  }catch(e){}
+}
+const fmtTime = sec => `${Math.floor(sec/60)}:${pad(sec%60)}`;
+function openBreath({minutes=1,type="moktak_breath"}={}){
+  const isMoktak = type==="moktak_breath";
+  const total=minutes*60, cycle=isMoktak?4000:5000; let left=total, inhale=true;
+  openModal(`
+    <div class="breath">
+      <div class="sheet-head" style="justify-content:center"><img src="sunim/2_meditate.png" alt="좌선하는 정우스님"></div>
+      <div class="metta-target">${isMoktak?"1분 목탁 호흡":"호흡 바라보기 "+minutes+"분"}</div>
+      <div class="breath-circle" id="bc" style="transition-duration:${cycle/1000}s">들이쉬고</div>
+      <div class="breath-time" id="bt">${fmtTime(total)}</div>
+      <p class="help-lines" style="margin:8px 0 0">${isMoktak?"4초마다 울리는 '똑'에 숨을 맞춰요.":"원은 길잡이일 뿐, 숨을 억지로 맞추지 않아도 돼요.<br>생각이 떠오르면 알아차리고 다시 숨으로 돌아와요."}</p>
+      <div class="close-row"><button class="btn" id="breathStop">그만할게요</button></div>
+    </div>`,{center:true,onClose:stopBreath});
+  const bc=$("#bc"), bt=$("#bt");
+  const step=()=>{ if(isMoktak) knock(); else if(inhale) chime(); bc.textContent=inhale?"들이쉬고":"내쉬고"; bc.classList.toggle("in",inhale); inhale=!inhale; };
+  setTimeout(step,60);
+  breathTimers.push(setInterval(step,cycle));
+  breathTimers.push(setInterval(()=>{
+    left--; bt.textContent=fmtTime(Math.max(left,0));
+    if(left<=0){ stopBreath(); finishPractice(type,minutes,isMoktak?"1분 동안 잘 머물렀어요. 그거면 충분해요.":`${minutes}분 동안 숨과 함께 있었어요. 잘했어요.`); }
+  },1000));
+  $("#breathStop").onclick=closeModal;
+}
+function stopBreath(){ breathTimers.forEach(clearInterval); breathTimers=[]; }
+function finishPractice(type,minutes,line){
+  S.practices.push({id:uid("p"),date:new Date().toISOString(),type,minutes});
+  save(); stopBreath(); stopMetta(); buzz(50); knock();
+  openModal(`<div class="crisis"><img src="sunim/4_lotus.png" alt="연꽃을 든 정우스님"><h2>잘 머물렀어요</h2><p>${esc(line)}</p><div class="close-row"><button class="btn btn-primary" id="pDone">고마워요</button></div></div>`,{center:true});
+  $("#pDone").onclick=closeModal;
+  setBubble(line);
+}
+
+/* ---------- 자애 명상 3분 (F4) — 출전: 자애경(숫타니파타 1:8) ---------- */
+const METTA = [
+  {who:"나에게", ph:["내가 편안하기를","내가 안전하기를","내가 행복하기를"]},
+  {who:"소중한 사람에게", ph:["당신이 편안하기를","당신이 안전하기를","당신이 행복하기를"]},
+  {who:"잘 모르는 사람에게", ph:["그 사람도 편안하기를","그 사람도 안전하기를","그 사람도 행복하기를"]},
+  {who:"나를 힘들게 한 사람에게", ph:["어렵다면 건너뛰어도 괜찮아요","그 사람도 괴로움에서 벗어나기를","그 사람도 편안하기를"]},
+  {who:"살아 있는 모든 존재에게", ph:["모든 존재가 편안하기를","모든 존재가 안전하기를","모든 존재가 행복하기를"]}
+];
+let mettaTimer=null;
+function stopMetta(){ clearInterval(mettaTimer); mettaTimer=null; }
+function openMetta(){
+  const PH_MS=12000; let phase=0, idx=0, elapsed=0; const total=METTA.length*3*PH_MS;
+  openModal(`
+    <div class="breath">
+      <div class="sheet-head" style="justify-content:center"><img src="sunim/1_hapjang.png" alt="합장하는 정우스님"></div>
+      <div class="metta-steps" id="ms"></div>
+      <div class="metta-target" id="mt"></div>
+      <div class="metta-phrase" id="mp"></div>
+      <div class="breath-time" id="mtime"></div>
+      <p class="help-lines" style="margin:8px 0 0">문장을 속으로 천천히 따라 말해 보세요.</p>
+      <div class="close-row" style="gap:8px"><button class="btn" id="mettaSkip">다음으로</button><button class="btn btn-ghost" id="mettaStop">그만할게요</button></div>
+    </div>`,{center:true,onClose:stopMetta});
+  const draw=()=>{
+    $("#ms").innerHTML=METTA.map((_,i)=>`<i style="width:8px;height:8px;border-radius:50%;background:${i<=phase?"var(--lotus-text)":"var(--line)"}"></i>`).join("");
+    $("#mt").textContent=METTA[phase].who;
+    $("#mp").innerHTML=`<span>${esc(METTA[phase].ph[idx])}</span>`;
+    $("#mtime").textContent=fmtTime(Math.max(0,Math.round((total-elapsed)/1000)));
+  };
+  const next=(skipPhase)=>{
+    if(skipPhase){ elapsed=(phase+1)*3*PH_MS; phase++; idx=0; }
+    else{ idx++; if(idx>=3){ idx=0; phase++; } }
+    if(phase>=METTA.length){ stopMetta(); finishPractice("metta",3,"나에게서 모든 존재까지, 다정한 마음을 건넸어요."); return; }
+    if(idx===0) chime();
+    draw();
+  };
+  chime(); draw();
+  let tick=0;
+  mettaTimer=setInterval(()=>{ elapsed+=1000; tick+=1000; if(tick>=PH_MS){ tick=0; next(false); } else if($("#mtime")) $("#mtime").textContent=fmtTime(Math.max(0,Math.round((total-elapsed)/1000))); },1000);
+  $("#mettaSkip").onclick=()=>{ tick=0; next(true); };
+  $("#mettaStop").onclick=closeModal;
+}
+function renderPracticeSum(){
+  const weekAgo=Date.now()-7*864e5;
+  const mins=S.practices.filter(p=>!S.deletedIds.includes(p.id) && new Date(p.date).getTime()>=weekAgo).reduce((a,p)=>a+(p.minutes||0),0);
+  $("#practiceSum").textContent = mins? `최근 7일 동안 ${mins}분 머물렀어요 🪷` : "1분이면 충분해요. 마음 가는 것 하나만 골라 봐요.";
+}
+document.querySelectorAll("[data-breath]").forEach(b=>b.addEventListener("click",()=>openBreath({minutes:+b.dataset.breath,type:"breath"})));
+$("#mettaStart").addEventListener("click",openMetta);
+$("#moktakBreathStart").addEventListener("click",()=>openBreath());
+
+/* ---------- 말풍선 ---------- */
+function setBubble(text){
+  const b=$("#homeBubble"); b.textContent=text;
+  b.classList.remove("fade"); void b.offsetWidth; b.classList.add("fade");
+}
+
+/* ---------- 마음 칩 (F1) ---------- */
+function renderMoodGrid(){
+  $("#moodGrid").innerHTML = MOODS.map(m=>
+    `<button class="chip" data-mood="${m.id}"><span class="emo" aria-hidden="true">${m.emo}</span>${esc(m.label)}</button>`).join("");
+  $("#moodGrid").querySelectorAll(".chip").forEach(c=>c.addEventListener("click",()=>selectMood(c.dataset.mood)));
+}
+function recordMood(id){
+  const entry={id:uid("m"),ts:new Date().toISOString(),date:todayStr(),mood:id,note:""};
+  S.moods.push(entry); save(); return entry;
+}
+function versesFor(mood){
+  const list=VERSES.filter(v=>v.moods.includes(mood));
+  return list.length?list:VERSES;
+}
+function selectMood(id){
+  const m=MOOD_BY_ID[id], entry=recordMood(id);
+  document.querySelectorAll("#moodGrid .chip").forEach(c=>c.classList.toggle("selected",c.dataset.mood===id));
+  setTimeout(()=>document.querySelectorAll("#moodGrid .chip").forEach(c=>c.classList.remove("selected")),900);
+  const pool=versesFor(id); let verse=pick(pool);
+  const pr=MOOD_PRACTICE[id];
+  openModal(`
+    <div class="sheet-head">
+      <img src="sunim/1_hapjang.png" alt="합장하는 정우스님">
+      <div class="bubble">${esc(m.line)}</div>
+    </div>
+    <label class="sr-only" for="moodNote">한 줄 메모</label>
+    <textarea id="moodNote" class="note-input" rows="1" maxlength="200" placeholder="${m.emo} ${esc(m.label)} — 한 줄 남겨도 좋아요 (선택)"></textarea>
+    <div class="rec-list">
+      <div id="recVerse"></div>
+      <button class="card rec" id="recPractice">
+        <span class="rec-ico" aria-hidden="true">${pr.ico}</span>
+        <span class="rec-body"><span class="rec-title">${esc(pr.title)}</span><br><span class="rec-desc">${esc(pr.desc)}</span></span>
+        <span aria-hidden="true">›</span>
+      </button>
+      <button class="card rec" id="recReflect">
+        <span class="rec-ico" aria-hidden="true">✍️</span>
+        <span class="rec-body"><span class="rec-title">털어놓고 내려놓기</span><br><span class="rec-desc">첫 번째 화살과 두 번째 화살을 나눠 적어요</span></span>
+        <span aria-hidden="true">›</span>
+      </button>
+    </div>
+    <div class="close-row"><button class="btn btn-ghost" id="sheetClose">닫기</button></div>`,
+    {onClose:()=>{ const n=$("#moodNote"); if(n && n.value.trim()!==entry.note){ entry.note=n.value.trim(); entry.updatedAt=new Date().toISOString(); } save(); }});
+  const renderV=()=>{ $("#recVerse").innerHTML=verseCardHTML(verse,{again:pool.length>1}); bindVerseCard($("#recVerse"),verse,()=>{ let nv; do{ nv=pick(pool); }while(pool.length>1 && nv.id===verse.id); verse=nv; renderV(); }); };
+  renderV();
+  setTimeout(()=>showTip("verse_save",document.querySelector('#recVerse [data-act="save"]')),700);
+  $("#moodNote").addEventListener("input",e=>{ entry.note=e.target.value.trim(); entry.updatedAt=new Date().toISOString(); saveSoon(); });
+  $("#recPractice").onclick=()=>{ closeModal(); if(pr.act==="breath") openBreath(); else openMetta(); };
+  $("#recReflect").onclick=()=>{ closeModal(); openReflect({mood:id}); };
+  $("#sheetClose").onclick=closeModal;
+  setBubble(m.line);
+}
+
+/* ---------- 위기 카드 (F8 — 수정·삭제 금지) ---------- */
+function openCrisis({record=true,onResume}={}){
+  if(record) recordMood("crisis");
+  openModal(`
+    <div class="crisis">
+      <img src="sunim/1_hapjang.png" alt="합장하는 정우스님">
+      <h2>지금 많이 힘들군요</h2>
+      <p>혼자 견디지 않아도 돼요.<br>지금 바로 이야기를 들어 줄 사람이 있어요.</p>
+      <a class="tel" href="tel:109"><span><b>109</b><br>자살예방 상담전화 · 24시간</span><span aria-hidden="true">📞</span></a>
+      <a class="tel" href="tel:15770199"><span><b>1577-0199</b><br>정신건강 상담전화 · 24시간</span><span aria-hidden="true">📞</span></a>
+      <p style="margin:14px 0 0;font-size:13.5px">위급한 상황이라면 112 또는 119에 바로 연락하세요.</p>
+      <div class="close-row" style="gap:8px;flex-wrap:wrap">
+        <button class="btn btn-primary" id="crisisBreath">통화 전, 1분만 함께 숨 쉬기</button>
+        ${onResume?'<button class="btn" id="crisisResume">계속 쓰기</button>':""}
+        <button class="btn btn-ghost" id="crisisClose">닫기</button>
+      </div>
+    </div>`,{center:true});
+  $("#crisisBreath").onclick=()=>{ closeModal(); openBreath(); };
+  $("#crisisClose").onclick=closeModal;
+  if(onResume) $("#crisisResume").onclick=()=>{ closeModal(); onResume(); };
+}
+$("#crisisChip").addEventListener("click",()=>openCrisis());
+/* 위기 단어 감지 — 기기 안에서만 검사하고 어디에도 전송하지 않음 (F8) */
+const CRISIS_WORDS=["죽고 싶","죽고싶","죽어 버리","죽어버리","사라지고 싶","사라지고싶","자해","자살","끝내고 싶","살기 싫","살고 싶지 않","살고싶지않"];
+const hasCrisis = t => { const x=String(t||""); return CRISIS_WORDS.some(w=>x.includes(w)); };
+
+/* ---------- 구절 카드 (F2) ---------- */
+function verseCardHTML(v,{again=false}={}){
+  const on=S.savedVerses.includes(v.id);
+  return `<article class="card verse-card">
+    <p class="verse-text">${esc(v.text)}</p>
+    <div class="verse-source">${esc(v.source)}</div>
+    <p class="verse-note">${esc(v.note)}</p>
+    <div class="verse-practice">${esc(v.practice)}</div>
+    <div class="verse-actions">
+      <button class="btn" data-act="save" aria-pressed="${on}" aria-label="${on?"담아 둔 구절에서 빼기":"구절 담아 두기"}"><span class="heart${on?" on":""}">${on?"♥":"♡"}</span>${on?"담았어요":"담아 두기"}</button>
+      ${again?'<button class="btn btn-ghost" data-act="again">다른 구절</button>':""}
+    </div></article>`;
+}
+function setSaved(id,on){
+  S.savedMeta=S.savedMeta||{};
+  const i=S.savedVerses.indexOf(id);
+  if(on&&i<0) S.savedVerses.push(id);
+  if(!on&&i>=0) S.savedVerses.splice(i,1);
+  S.savedMeta[id]=on?Date.now():-Date.now();
+}
+function bindVerseCard(el,v,onAgain){
+  el.querySelector('[data-act="save"]').onclick=e=>{
+    const i=S.savedVerses.indexOf(v.id);
+    setSaved(v.id,i<0); save();
+    const html=verseCardHTML(v,{again:!!onAgain}); el.innerHTML=html; bindVerseCard(el,v,onAgain);
+    if(i<0){ const h=el.querySelector(".heart"); h.classList.add("pop"); knock(); buzz(30); }
+  };
+  const a=el.querySelector('[data-act="again"]'); if(a&&onAgain) a.onclick=onAgain;
+}
+function todayVerse(){ return VERSES[hashStr(todayStr())%VERSES.length]; }
+function renderTodayVerse(){ const el=$("#todayVerse"), v=todayVerse(); el.innerHTML=verseCardHTML(v); bindVerseCard(el,v); }
+
+/* ---------- 구절 탭 (F2): 오늘 · 담아 둔 · 마음별 ---------- */
+let verseFilter="today";
+function renderVerseTab(){
+  const f=[{id:"today",label:"오늘의 구절"},{id:"saved",label:`♥ 담아 둔 ${S.savedVerses.length||""}`.trim()},...MOODS.map(m=>({id:m.id,label:`${m.emo} ${m.label}`}))];
+  $("#verseFilters").innerHTML=f.map(x=>`<button class="fchip" data-f="${x.id}" aria-pressed="${verseFilter===x.id}">${esc(x.label)}</button>`).join("");
+  $("#verseFilters").querySelectorAll(".fchip").forEach(c=>c.onclick=()=>{ verseFilter=c.dataset.f; renderVerseTab(); });
+  const el=$("#verseList");
+  if(verseFilter==="saved") return renderSaved(el);
+  const list = verseFilter==="today" ? [todayVerse()] : VERSES.filter(v=>v.moods.includes(verseFilter));
+  el.innerHTML=list.map(v=>`<div data-id="${v.id}"></div>`).join("");
+  el.querySelectorAll("[data-id]").forEach(box=>{ const v=VERSE_BY_ID[box.dataset.id]; box.innerHTML=verseCardHTML(v); bindVerseCard(box,v); });
+}
+function renderSaved(el){
+  const ids=[...S.savedVerses].reverse().filter(id=>VERSE_BY_ID[id]);
+  if(!ids.length){
+    el.innerHTML=`<div class="empty"><img src="sunim/5_guide.png" alt="경전을 펼친 정우스님"><h2>마음에 남는 구절을 담아 보세요</h2><p>구절 카드의 ♡를 누르면 여기에 모여요.</p><button class="btn btn-primary" id="goToday">오늘의 구절 보기</button></div>`;
+    $("#goToday").onclick=()=>{ verseFilter="today"; renderVerseTab(); };
+    return;
+  }
+  el.innerHTML=ids.map(id=>`<div data-id="${id}"></div>`).join("");
+  el.querySelectorAll("[data-id]").forEach(box=>{
+    const v=VERSE_BY_ID[box.dataset.id];
+    box.innerHTML=verseCardHTML(v);
+    // 빼기 시 되돌리기 토스트 (U9)
+    box.querySelector('[data-act="save"]').onclick=()=>{
+      const idx=S.savedVerses.indexOf(v.id); if(idx<0) return;
+      const prev=S.savedMeta[v.id];
+      setSaved(v.id,false); save(); renderVerseTab(); renderTodayVerse();
+      toast("담아 둔 구절에서 뺐어요",{label:"되돌리기",fn:()=>{ if(!S.savedVerses.includes(v.id)){ S.savedVerses.splice(idx,0,v.id); S.savedMeta[v.id]=prev>0?prev:Date.now(); save(); renderVerseTab(); renderTodayVerse(); } }});
+    };
+  });
+}
+
+/* ---------- 털어놓고 내려놓기 (F3) — 화살경(상윳따 니까야 36:6) ---------- */
+const SECOND_ARROW_TAGS=["또 나만…","분명 날 싫어할 거야","다 망했어","내가 부족해서 그래","앞으로도 계속 이럴 거야","그때 그랬어야 했는데"];
+const REFLECT_STEPS=[
+  {key:"intensityBefore",type:"weight",tag:"마음의 무게",q:"지금 마음의 무게는 어느 정도인가요?",help:"정답은 없어요. 느껴지는 만큼만."},
+  {key:"firstArrow",tag:"첫 번째 화살",q:"실제로 무슨 일이 있었나요?",help:"내 생각이나 해석은 잠시 빼고, 카메라에 찍힐 만한 사실만 적어 봐요.",ph:"예) 회의에서 내 의견이 채택되지 않았다"},
+  {key:"secondArrow",tag:"두 번째 화살",q:"그 일 위에 내가 덧붙인 생각은요?",help:"머릿속에서 되풀이되는 말을 그대로 적어도 돼요. 아래 예시를 눌러도 좋아요.",ph:"예) 역시 나는 인정받지 못하는 사람이야",tags:true},
+  {key:"clinging",tag:"붙잡고 있는 것",q:"'꼭 ~해야만 해'라고 쥐고 있는 게 있나요?",help:"예) 모두에게 좋은 사람이어야 해, 실수하면 안 돼",ph:"꼭 ~해야만 한다고 느끼는 것"},
+  {key:"impermanence",tag:"지나가요",q:"1년 뒤의 나에게도 이 일이 지금만큼 클까요?",help:"1년 뒤의 내가 지금의 나에게 해 줄 말을 적어 봐요.",ph:"1년 뒤의 내가 하는 말"},
+  {key:"oneStep",tag:"한 걸음",q:"지금 할 수 있는 작고 친절한 행동 하나는?",help:"물 한 잔, 산책 10분, 짧은 메시지처럼 아주 작게.",ph:"오늘 해 볼 한 가지"},
+  {key:"intensityAfter",type:"weight",tag:"내려놓은 뒤",q:"이제 마음의 무게는 어떤가요?",help:"줄지 않았어도 괜찮아요. 꺼내 놓은 것만으로도 충분해요."}
+];
+const TEXT_KEYS=["firstArrow","secondArrow","clinging","impermanence","oneStep"];
+const reflectHasText = r => TEXT_KEYS.some(k=>(r[k]||"").trim()) || (r.secondArrowTags||[]).length;
+function newReflection(mood){
+  const now=new Date().toISOString();
+  return {id:uid("r"),createdAt:now,updatedAt:now,mood:mood||null,intensityBefore:50,firstArrow:"",secondArrow:"",secondArrowTags:[],clinging:"",impermanence:"",oneStep:"",intensityAfter:null,verseId:null,done:false};
+}
+function openReflect({mood=null,resume=null,step=0}={}){
+  let r=resume||newReflection(mood);
+  if(!resume) S.reflections.push(r);
+  let i=step; let warned=false;
+  const touch=()=>{ r.updatedAt=new Date().toISOString(); saveSoon(); };
+  const cleanupIfEmpty=()=>{ if(!r.done && !reflectHasText(r)){ const k=S.reflections.indexOf(r); if(k>=0){ S.reflections.splice(k,1); save(); } } else save(); if($("#screen-record").classList.contains("active")) renderRecord(); renderResume(); };
+  const render=()=>{
+    const st=REFLECT_STEPS[i];
+    const prog=REFLECT_STEPS.map((_,k)=>`<i class="${k<=i?"on":""}"></i>`).join("");
+    let body="";
+    if(st.type==="weight"){
+      const val = r[st.key]==null ? (r.intensityBefore??50) : r[st.key];
+      if(r[st.key]==null){ r[st.key]=val; }
+      body=`<div class="weight"><input type="range" id="wv" min="0" max="100" step="5" value="${val}" aria-label="마음의 무게 0에서 100"><span class="weight-num" id="wn">${val}</span></div><div class="weight-scale"><span>가벼움</span><span>무거움</span></div>`;
+    }else{
+      body=`<label class="sr-only" for="wt">${esc(st.q)}</label><textarea id="wt" class="note-input big" maxlength="1000" placeholder="${esc(st.ph||"")}">${esc(r[st.key]||"")}</textarea>`;
+      if(st.tags) body+=`<div class="tagchips">${SECOND_ARROW_TAGS.map(t=>`<button class="tagchip" data-tag="${esc(t)}" aria-pressed="${r.secondArrowTags.includes(t)}">${esc(t)}</button>`).join("")}</div>`;
+    }
+    const canPause = i>=2 && i<REFLECT_STEPS.length-1;
+    openModal(`
+      <div class="wiz-progress" aria-label="${i+1} / ${REFLECT_STEPS.length} 단계">${prog}</div>
+      <span class="wiz-tag">${esc(st.tag)}</span>
+      <h2 class="wiz-q">${esc(st.q)}</h2>
+      <p class="wiz-help">${esc(st.help)}</p>
+      ${body}
+      <div class="wiz-nav">
+        ${i>0?'<button class="btn btn-ghost" id="wPrev">이전</button>':'<button class="btn btn-ghost" id="wCancel">닫기</button>'}
+        <span class="spacer"></span>
+        ${canPause?'<button class="btn" id="wPause">여기까지</button>':""}
+        <button class="btn btn-primary" id="wNext">${i===REFLECT_STEPS.length-1?"내려놓기":"다음"}</button>
+      </div>`,{onClose:cleanupIfEmpty});
+    if(st.tags) showTip("reflect_step2",document.querySelector(".tagchips"));
+    if(st.type==="weight"){
+      $("#wv").oninput=e=>{ r[st.key]=+e.target.value; $("#wn").textContent=e.target.value; touch(); };
+    }else{
+      const ta=$("#wt"); ta.oninput=e=>{ r[st.key]=e.target.value; touch(); };
+      if(!("ontouchstart" in window)) ta.focus();
+      document.querySelectorAll(".tagchip").forEach(c=>c.onclick=()=>{
+        const t=c.dataset.tag, k=r.secondArrowTags.indexOf(t);
+        if(k>=0) r.secondArrowTags.splice(k,1); else r.secondArrowTags.push(t);
+        c.setAttribute("aria-pressed",k<0); touch();
+      });
+    }
+    const go=n=>{ save(); i=n; render(); };
+    const checkCrisis=then=>{
+      if(!warned && TEXT_KEYS.some(k=>hasCrisis(r[k]))){ warned=true; save(); openCrisis({record:false,onResume:then}); return; }
+      then();
+    };
+    if($("#wPrev")) $("#wPrev").onclick=()=>go(i-1);
+    if($("#wCancel")) $("#wCancel").onclick=closeModal;
+    if($("#wPause")) $("#wPause").onclick=()=>checkCrisis(()=>{ save(); closeModal(); toast("여기까지 저장했어요. 기록 탭에서 이어 쓸 수 있어요."); });
+    $("#wNext").onclick=()=>checkCrisis(()=>{ if(i<REFLECT_STEPS.length-1) go(i+1); else finish(); });
+  };
+  const finish=()=>{
+    r.done=true; r.updatedAt=new Date().toISOString();
+    const pool=versesFor(r.mood||"regret"); r.verseId=pick(pool).id;
+    save(); knock(); buzz(50);
+    const before=r.intensityBefore, after=r.intensityAfter, lighter=after<before;
+    openModal(`
+      <div class="crisis">
+        <img src="sunim/${lighter?"4_lotus":"1_hapjang"}.png" alt="${lighter?"연꽃을 든":"합장하는"} 정우스님">
+        <h2>${lighter?"조금 가벼워졌네요":"꺼내 놓은 것만으로도 충분해요"}</h2>
+        <div class="ba"><div>${before}<small>처음</small></div><div class="arrow">→</div><div id="baAfter">${before}<small>지금</small></div></div>
+        <p>${lighter?"두 번째 화살을 조금 내려놓았어요.":"무게가 그대로여도 괜찮아요. 오늘은 바라본 것까지가 수행이에요."}</p>
+      </div>
+      <div id="rVerse"></div>
+      <div class="close-row"><button class="btn btn-primary" id="rCopy" style="width:100%">🙏 스님께 털어놓기 (복사)</button></div>
+      <div class="close-row" style="gap:8px;margin-top:8px"><button class="btn" id="rList">기록 보기</button><button class="btn btn-primary" id="rDone">닫기</button></div>`,{center:true,onClose:()=>{ if($("#screen-record").classList.contains("active")) renderRecord(); }});
+    const box=$("#rVerse"), v=VERSE_BY_ID[r.verseId]; box.innerHTML=verseCardHTML(v); bindVerseCard(box,v);
+    // 숫자가 천천히 내려가는 애니메이션 (U4)
+    const out=$("#baAfter"), lab='<small>지금</small>';
+    if(reduceMotion()||before===after) out.innerHTML=after+lab;
+    else{ const steps=20; let k=0; const t=setInterval(()=>{ k++; out.innerHTML=Math.round(before+(after-before)*k/steps)+lab; if(k>=steps) clearInterval(t); },40); }
+    $("#rDone").onclick=closeModal;
+    $("#rCopy").onclick=()=>copySunimPrompt(r);
+    setTimeout(()=>showTip("copy_prompt",$("#rCopy")),1200);
+    $("#rList").onclick=()=>{ closeModal(); showTab("record"); };
+    setBubble(lighter?"조금 가벼워졌네요. 잘 내려놓았어요.":"꺼내 놓은 것만으로도 충분해요.");
+  };
+  render();
+}
+function firstEmptyStep(r){
+  for(let k=1;k<REFLECT_STEPS.length-1;k++){ if(!(r[REFLECT_STEPS[k].key]||"").trim()) return k; }
+  return REFLECT_STEPS.length-1;
+}
+function openReflectDetail(r){
+  const m=MOOD_BY_ID[r.mood], v=VERSE_BY_ID[r.verseId], d=new Date(r.createdAt);
+  const row=(t,x)=>x?`<dt>${t}</dt><dd>${esc(x)}</dd>`:"";
+  openModal(`
+    <div class="li-top"><span>${d.getMonth()+1}월 ${d.getDate()}일 ${pad(d.getHours())}:${pad(d.getMinutes())}</span><span>${m?m.emo+" "+esc(m.label):""}</span></div>
+    <div class="ba" style="font-size:28px"><div>${r.intensityBefore}<small>처음</small></div><div class="arrow">→</div><div>${r.intensityAfter??"-"}<small>나중</small></div></div>
+    <dl class="detail">
+      ${row("첫 번째 화살",r.firstArrow)}
+      ${row("두 번째 화살",[r.secondArrow,(r.secondArrowTags||[]).join(" · ")].filter(Boolean).join("\n"))}
+      ${row("붙잡고 있는 것",r.clinging)}${row("지나가요",r.impermanence)}${row("한 걸음",r.oneStep)}
+    </dl>
+    <div id="dVerse" style="margin-top:14px"></div>
+    <div class="close-row"><button class="btn" id="dCopy" style="width:100%">🙏 스님께 털어놓기 (복사)</button></div>
+    <div class="close-row" style="gap:8px;margin-top:8px"><button class="btn btn-ghost" id="dDel">지우기</button><button class="btn btn-primary" id="dClose">닫기</button></div>`);
+  $("#dCopy").onclick=()=>copySunimPrompt(r);
+  if(v){ const box=$("#dVerse"); box.innerHTML=verseCardHTML(v); bindVerseCard(box,v); }
+  $("#dClose").onclick=closeModal;
+  $("#dDel").onclick=()=>{ closeModal(); deleteItem("reflections",r,"털어놓기 기록을 지웠어요"); };
+}
+/* 삭제 + 5초 되돌리기 (U9). 동기화용 삭제 기록(deletedIds)을 함께 남긴다 */
+function deleteItem(coll,item,msg){
+  const arr=S[coll], idx=arr.indexOf(item); if(idx<0) return;
+  arr.splice(idx,1); S.deletedIds.push(item.id); save(); renderRecord();
+  toast(msg,{label:"되돌리기",fn:()=>{ arr.splice(idx,0,item); S.deletedIds=S.deletedIds.filter(x=>x!==item.id); save(); renderRecord(); }});
+}
+
+/* ---------- 마음 달력 (F5) ---------- */
+let calY, calM, calSel=null;
+function dayMap(){
+  const map={};
+  S.moods.forEach(x=>{ if(S.deletedIds.includes(x.id)) return; (map[x.date]=map[x.date]||{moods:[],refl:[]}).moods.push(x); });
+  S.reflections.forEach(x=>{ if(!x.done && !reflectHasText(x)) return; const d=todayStr(new Date(x.createdAt)); (map[d]=map[d]||{moods:[],refl:[]}).refl.push(x); });
+  return map;
+}
+const calEmoji = id => id==="crisis" ? "🤍" : (MOOD_BY_ID[id]||{emo:"·"}).emo;
+function renderCalendar(){
+  const now=new Date(); if(calY==null){ calY=now.getFullYear(); calM=now.getMonth(); }
+  const first=new Date(calY,calM,1), days=new Date(calY,calM+1,0).getDate(), map=dayMap(), today=todayStr();
+  let cells="";
+  for(let k=0;k<first.getDay();k++) cells+='<span class="cal-day blank"></span>';
+  for(let d=1; d<=days; d++){
+    const ds=`${calY}-${pad(calM+1)}-${pad(d)}`, info=map[ds], mk=S.moktak[ds]||0;
+    const last=info&&info.moods.length?calEmoji(info.moods[info.moods.length-1].mood):(info&&info.refl.length?"✍️":"");
+    cells+=`<button class="cal-day${ds===today?" today":""}${ds===calSel?" sel":""}" data-d="${ds}" aria-label="${calM+1}월 ${d}일${last?" 기록 있음":""}"><span>${d}</span><span class="ce">${last}</span>${mk?`<span class="cm">똑${mk}</span>`:""}</button>`;
+  }
+  $("#calendar").innerHTML=`
+    <div class="cal-head"><button class="cal-nav" id="calPrev" aria-label="이전 달">‹</button><b>${calY}년 ${calM+1}월</b><button class="cal-nav" id="calNext" aria-label="다음 달">›</button></div>
+    <div class="cal-grid">${["일","월","화","수","목","금","토"].map(x=>`<span class="cal-dow">${x}</span>`).join("")}${cells}</div>`;
+  $("#calPrev").onclick=()=>{ calM--; if(calM<0){calM=11;calY--;} renderCalendar(); };
+  $("#calNext").onclick=()=>{ calM++; if(calM>11){calM=0;calY++;} renderCalendar(); };
+  $("#calendar").querySelectorAll(".cal-day[data-d]").forEach(b=>b.onclick=()=>{ calSel=calSel===b.dataset.d?null:b.dataset.d; renderCalendar(); renderDayDetail(); });
+}
+function renderWeekSum(){
+  const since=Date.now()-7*864e5, cnt={};
+  S.moods.forEach(x=>{ if(S.deletedIds.includes(x.id)||x.mood==="crisis") return; if(new Date(x.ts).getTime()>=since) cnt[x.mood]=(cnt[x.mood]||0)+1; });
+  const top=Object.entries(cnt).sort((a,b)=>b[1]-a[1])[0];
+  const el=$("#weekSum");
+  if(!top){ el.innerHTML=`<div class="week-sum">이번 주 마음이 쌓이면 흐름을 알려 드릴게요.</div>`; return; }
+  const m=MOOD_BY_ID[top[0]], pr=MOOD_PRACTICE[top[0]];
+  el.innerHTML=`<div class="week-sum">이번 주에는 <b>${m.emo} ${esc(m.label)}</b>를 ${top[1]}번 골랐어요.${top[0]==="okay"?" 좋은 한 주였네요.":(top[1]>=2?` ${esc(pr.title)}이 도움이 될지도 몰라요.`:"")}
+    ${top[0]==="okay"||top[1]<2?"":`<div style="margin-top:8px"><button class="btn" id="weekAct">${pr.ico} ${esc(pr.title)}</button></div>`}</div>`;
+  if($("#weekAct")) $("#weekAct").onclick=()=>{ if(pr.act==="breath") openBreath(); else openMetta(); };
+}
+function renderDayDetail(){
+  const el=$("#dayDetail");
+  if(!calSel){ el.innerHTML=""; return; }
+  const info=dayMap()[calSel], [y,mo,d]=calSel.split("-").map(Number);
+  if(!info){ el.innerHTML=`<p class="help-lines" style="text-align:center">${mo}월 ${d}일에는 기록이 없어요. 비어 있는 날도 괜찮아요.</p>`; return; }
+  el.innerHTML=`<div class="stack">${info.moods.map(x=>{ const m=MOOD_BY_ID[x.mood]||{emo:"·",label:x.mood}; const t=new Date(x.ts);
+    return `<div class="card mood-log-item"><span class="emo" aria-hidden="true">${calEmoji(x.mood)}</span><div><div>${esc(m.label)}</div>${x.note?`<div>${esc(x.note)}</div>`:""}<div class="meta">${pad(t.getHours())}:${pad(t.getMinutes())}</div></div></div>`; }).join("")}
+    ${info.refl.map(r=>reflectItemHTML(r)).join("")}</div>`;
+  bindReflectItems(el);
+}
+
+/* ---------- 털어놓기 목록 ---------- */
+function reflectItemHTML(r){
+  const d=new Date(r.createdAt), m=MOOD_BY_ID[r.mood];
+  const title=r.firstArrow||r.secondArrow||(r.secondArrowTags||[]).join(" · ")||"(제목 없음)";
+  return `<button class="card list-item" data-rid="${r.id}">
+    <div class="li-top"><span>${d.getMonth()+1}월 ${d.getDate()}일${m?" · "+m.emo:""}</span>${r.done?`<span>무게 ${r.intensityBefore} → ${r.intensityAfter}</span>`:'<span class="badge">이어 쓰기</span>'}</div>
+    <div class="li-title">${esc(title)}</div></button>`;
+}
+function bindReflectItems(root){
+  root.querySelectorAll("[data-rid]").forEach(b=>b.onclick=()=>{
+    const r=S.reflections.find(x=>x.id===b.dataset.rid); if(!r) return;
+    if(r.done) openReflectDetail(r); else openReflect({resume:r,step:firstEmptyStep(r)});
+  });
+}
+function renderReflectList(){
+  const el=$("#reflectList"), list=S.reflections.filter(r=>r.done||reflectHasText(r)).slice().reverse();
+  if(!list.length){
+    el.innerHTML=`<div class="empty"><img src="sunim/7_tea.png" alt="차를 마시는 정우스님"><h2>무거운 날, 여기에 내려놓아요</h2><p>첫 번째 화살과 두 번째 화살을 나눠 적다 보면<br>마음이 조금 가벼워져요.</p><button class="btn btn-primary" id="reflectEmptyBtn">털어놓기 시작</button></div>`;
+    $("#reflectEmptyBtn").onclick=()=>openReflect();
+    return;
+  }
+  el.innerHTML=list.map(reflectItemHTML).join(""); bindReflectItems(el);
+}
+$("#reflectNew").addEventListener("click",()=>openReflect());
+
+/* ---------- 기록 탭 ---------- */
+function renderRecord(){
+  renderCalendar(); renderWeekSum(); renderDayDetail(); renderReflectList();
+  document.querySelectorAll(".switch[data-setting]").forEach(sw=>sw.setAttribute("aria-checked",!!S.settings[sw.dataset.setting]));
+}
+document.querySelectorAll(".switch[data-setting]").forEach(sw=>sw.addEventListener("click",()=>{
+  const k=sw.dataset.setting; S.settings[k]=!S.settings[k]; save();
+  sw.setAttribute("aria-checked",S.settings[k]); applyMotion();
+}));
+function applyMotion(){ document.documentElement.classList.toggle("reduce-motion",!!S.settings.reduceMotion); }
+
+/* ---------- 기능 고르기 (F9) ---------- */
+const FEATURES=[
+  {id:"verse",   ico:"📜", label:"오늘의 구절", desc:"마음에 맞는 부처님 말씀 한 줄"},
+  {id:"practice",ico:"🧘", label:"짧은 수행",   desc:"1~5분 호흡·자애 명상"},
+  {id:"reflect", ico:"✍️", label:"털어놓기",    desc:"무거운 마음을 적고 내려놓기"},
+  {id:"calendar",ico:"📅", label:"마음 달력",   desc:"날마다 고른 마음 모아 보기"}
+];
+const featOn = id => (S.settings.enabledFeatures||[]).includes(id);
+function applyFeatures(){
+  const show=(sel,on)=>document.querySelectorAll(sel).forEach(e=>e.style.display=on?"":"none");
+  show('.tab[data-tab="verse"]',featOn("verse"));
+  show('.tab[data-tab="practice"]',featOn("practice"));
+  const vis=[...document.querySelectorAll(".tab")].filter(t=>t.style.display!=="none").length;
+  $("nav.tabs .inner").style.gridTemplateColumns=`repeat(${vis},1fr)`;
+  show("#todayVerseTitle,#todayVerse",featOn("verse"));
+  show("#calTitle,#calendar,#weekSum,#dayDetail",featOn("calendar"));
+  show("#reflectTitle,#reflectList",featOn("reflect"));
+  const act=document.querySelector(".screen.active");
+  if(act && [...document.querySelectorAll(".tab")].some(t=>t.style.display==="none" && "screen-"+t.dataset.tab===act.id)) showTab("home");
+}
+function renderFeatureSettings(){
+  $("#featureSettings").innerHTML=FEATURES.map(f=>`<div class="setting-row"><span>${f.ico} ${esc(f.label)}</span><button class="switch" role="switch" data-feat="${f.id}" aria-checked="${featOn(f.id)}" aria-label="${esc(f.label)}"></button></div>`).join("");
+  $("#featureSettings").querySelectorAll("[data-feat]").forEach(sw=>sw.onclick=()=>{
+    const id=sw.dataset.feat, list=S.settings.enabledFeatures, k=list.indexOf(id);
+    if(k>=0) list.splice(k,1); else list.push(id);
+    save(); sw.setAttribute("aria-checked",k<0); applyFeatures();
+  });
+}
+
+/* ---------- 코치마크 (U2): 기능을 처음 쓸 때 한 번만 ---------- */
+const TIPS={
+  home_mood:"지금 마음에 가까운 걸 하나 눌러 봐요. 정답은 없어요.",
+  reflect_step2:"두 번째 화살은 일어난 일 위에 내가 덧붙인 생각이에요. 예시를 눌러도 돼요.",
+  verse_save:"마음에 남는 구절은 ♡로 담아 둘 수 있어요.",
+  practice_start:"1분도 충분해요. 소리는 기록 탭 설정에서 끌 수 있어요.",
+  copy_prompt:"누르면 내용이 복사돼요. Claude 같은 AI에 붙여 넣으면 정우스님처럼 이야기해 줘요.",
+  calendar:"날마다 고른 마음이 여기에 쌓여요. 날짜를 누르면 그날 기록이 보여요."
+};
+let tipOpen=false;
+function showTip(id,target){
+  if(!target || tipOpen || S.settings.seenTips.includes(id)) return;
+  S.settings.seenTips.push(id); save(); tipOpen=true;
+  target.scrollIntoView({block:"center",behavior:reduceMotion()?"auto":"smooth"});
+  setTimeout(()=>{
+    const r=target.getBoundingClientRect(), pad2=6, below=r.top<window.innerHeight*0.55;
+    const wrap=document.createElement("div"); wrap.className="tip-wrap"; wrap.setAttribute("role","dialog"); wrap.setAttribute("aria-label","도움말");
+    wrap.innerHTML=`<div class="tip-hole" style="top:${r.top-pad2}px;left:${r.left-pad2}px;width:${r.width+pad2*2}px;height:${r.height+pad2*2}px"></div>
+      <div class="tip-bubble" style="${below?`top:${Math.min(r.bottom+14,window.innerHeight-150)}px`:`bottom:${window.innerHeight-r.top+14}px`}">
+        <img src="sunim/5_guide.png" alt="" aria-hidden="true"><div><p>${esc(TIPS[id])}</p><span class="tip-ok">알겠어요 · 아무 곳이나 눌러요</span></div></div>`;
+    document.body.appendChild(wrap);
+    const close=()=>{ wrap.remove(); tipOpen=false; };
+    wrap.addEventListener("click",close); setTimeout(close,12000);
+  }, reduceMotion()?30:380);
+}
+function resetTips(){ S.settings.seenTips=[]; save(); toast("도움말을 다시 보여 드릴게요"); }
+
+/* ---------- 스님께 털어놓기: AI 코치 프롬프트 복사 (F7) ---------- */
+function sunimPrompt(r){
+  const m=MOOD_BY_ID[r.mood], v=VERSE_BY_ID[r.verseId];
+  const L=(k,x)=>x?`- ${k}: ${x}\n`:"";
+  return `당신은 '정우스님'이라는 다정한 안내자입니다. 실제 스님이나 상담사가 아니라, 불교의 지혜를 쉬운 말로 건네는 친구 같은 존재예요. 아래 기록을 읽고 이야기를 나눠 주세요.
+
+[꼭 지켜 주세요]
+- 존댓말로, 짧고 다정하게 (한 번에 6~8문장 이내)
+- 진단이나 치료를 말하지 마세요. 업보·전생 탓이나 신앙 권유도 하지 마세요.
+- 경전을 인용할 때는 경전 이름과 장·게송 번호를 밝히고, 확실하지 않으면 인용하지 마세요.
+- 스스로를 해칠 위험이 보이면 가장 먼저 자살예방 상담전화 109, 정신건강 상담전화 1577-0199(24시간)를 안내하세요.
+- 첫 번째 화살(일어난 일)과 두 번째 화살(내가 덧붙인 생각)을 구분하도록 부드럽게 도와주세요.
+- 마지막은 '지금 할 수 있는 작은 한 걸음' 하나로 마무리하세요.
+
+[오늘 털어놓은 내용]
+${L("지금 마음", m&&m.label)}${L("마음의 무게", r.intensityAfter!=null?`${r.intensityBefore} → ${r.intensityAfter} (0~100)`:`${r.intensityBefore} (0~100)`)}${L("첫 번째 화살(일어난 일)", r.firstArrow)}${L("두 번째 화살(덧붙인 생각)", [r.secondArrow,(r.secondArrowTags||[]).join(", ")].filter(Boolean).join(" / "))}${L("붙잡고 있는 것", r.clinging)}${L("1년 뒤의 나", r.impermanence)}${L("한 걸음", r.oneStep)}${v?`- 앱이 건넨 구절: "${v.text}" (${v.source})\n`:""}
+이 기록을 읽고, 제 마음을 먼저 알아봐 주세요.`;
+}
+async function copyText(text){
+  try{ await navigator.clipboard.writeText(text); return true; }
+  catch(e){
+    const ta=document.createElement("textarea"); ta.value=text; ta.style.position="fixed"; ta.style.opacity="0"; document.body.appendChild(ta); ta.select();
+    let ok=false; try{ ok=document.execCommand("copy"); }catch(_){} ta.remove(); return ok;
+  }
+}
+async function copySunimPrompt(r){
+  const ok=await copyText(sunimPrompt(r));
+  toast(ok?"복사했어요. Claude 같은 AI에 붙여 넣어 보세요 🙏":"복사하지 못했어요. 다시 눌러 주세요.");
+}
+
+/* ---------- 정우스님 안내 챗봇 (F7) — 버튼으로만 고르는 스크립트 봇 ---------- */
+const SUNIM_FAQ={
+  root:{pose:"3_moktak",text:"안녕하세요, 정우스님이에요. 궁금한 걸 골라 주세요.",opts:[
+    ["이 앱은 뭐 하는 곳이에요?","about"],["불교를 몰라도 돼요?","nobuddhism"],["정우스님은 진짜 스님이에요?","who"],
+    ["목탁은 어떻게 써요?","moktak"],["털어놓기는 어떻게 해요?","reflect"],["'스님께 털어놓기'가 뭐예요?","coach"],
+    ["수행은 어떻게 해요?","practice"],["구절은 어디서 왔어요?","verse"],["내 기록은 어디에 저장돼요?","data"],
+    ["화면 도움말 다시 보기","tips"],["지금 많이 힘들어요","crisis"]]},
+  about:{pose:"5_guide",text:"지금 마음을 한 번 고르면, 그 마음에 맞는 부처님 말씀 한 줄과 짧은 수행, 털어놓기를 건네는 곳이에요. 쓰고 싶은 것만 골라 가볍게 쓰면 돼요. 이름의 '방하착'은 '내려놓아라'라는 뜻이에요."},
+  nobuddhism:{pose:"4_lotus",text:"몰라도 괜찮아요. 신앙을 권하는 앱이 아니에요. 오래된 지혜 중에서 지금 마음에 도움이 되는 것만 쉬운 말로 풀어 두었어요."},
+  who:{pose:"1_hapjang",text:"아니에요. 저는 이 앱을 안내하는 캐릭터예요. 진짜 스님이나 상담 선생님이 아니니, 많이 힘들 때는 꼭 전문가의 도움을 받아 주세요."},
+  moktak:{pose:"3_moktak",text:"홈의 목탁을 톡 두드리면 '똑' 소리와 함께 글자가 피어올라요. 하루 108번까지 세어 드려요. 꾹 누르면 4초마다 '똑'에 맞춰 숨 쉬는 1분 목탁 호흡이 시작돼요."},
+  reflect:{pose:"5_guide",text:"무거운 일을 일곱 단계로 나눠 적어요. 핵심은 '첫 번째 화살'(실제로 일어난 일)과 '두 번째 화살'(그 위에 내가 덧붙인 생각)을 나눠 보는 거예요. 두 단계만 쓰고 '여기까지'를 눌러도 저장돼요."},
+  coach:{pose:"7_tea",text:"털어놓기를 마친 뒤 '스님께 털어놓기'를 누르면, 기록과 대화 지침이 함께 복사돼요. Claude 같은 AI 채팅창에 붙여 넣으면 제 말투로 이야기를 이어 가요. 앱은 아무것도 밖으로 보내지 않아요."},
+  practice:{pose:"2_meditate",text:"수행 탭에 호흡 바라보기(1·3·5분), 자애 명상 3분, 1분 목탁 호흡이 있어요. 1분이면 충분해요. 소리는 기록 탭 설정에서 끌 수 있어요."},
+  verse:{pose:"5_guide",text:"법구경, 니까야, 금강경, 선어록 같은 원전에서 골라 앱의 말투로 새로 풀어 썼어요. 모든 구절에 출처를 적었고, 출처가 분명하지 않은 '명언'은 넣지 않았어요."},
+  data:{pose:"6_mala",text:"기본적으로 모든 기록은 지금 쓰는 이 기기 안에만 저장돼요. 기록 탭에서 Google로 로그인하면 휴대폰과 컴퓨터에서 같은 기록을 볼 수 있어요. 내 계정 전용 공간이라 다른 사용자는 볼 수 없어요."},
+  tips:{pose:"5_guide",text:"화면마다 처음 한 번 나오던 도움말을 다시 보여 드릴게요.",act:"tips"},
+  crisis:{pose:"1_hapjang",text:"알려 줘서 고마워요. 지금 바로 이야기를 들어 줄 사람과 이어 드릴게요.",act:"crisis"}
+};
+function openSunimChat(){
+  openModal(`<div class="chat-log" id="chatLog" aria-live="polite"></div><div class="chat-opts" id="chatOpts"></div>`);
+  goChat("root",null);
+}
+function goChat(nodeId,question){
+  const n=SUNIM_FAQ[nodeId], log=$("#chatLog"); if(!log) return;
+  if(question) log.insertAdjacentHTML("beforeend",`<div class="chat-me">${esc(question)}</div>`);
+  log.insertAdjacentHTML("beforeend",`<div class="chat-row"><img src="sunim/${n.pose}.png" alt=""><div class="bubble">${esc(n.text)}</div></div>`);
+  const opts = n.opts || [["처음으로","root"]];
+  $("#chatOpts").innerHTML=opts.map(([label,to])=>`<button class="tagchip" data-to="${to}">${esc(label)}</button>`).join("")+`<button class="tagchip" data-close="1">닫기</button>`;
+  $("#chatOpts").querySelectorAll("[data-to]").forEach(b=>b.onclick=()=>goChat(b.dataset.to,b.textContent));
+  $("#chatOpts").querySelector("[data-close]").onclick=closeModal;
+  const sheet=log.closest(".sheet"); sheet.scrollTop=sheet.scrollHeight;
+  if(n.act==="tips") resetTips();
+  if(n.act==="crisis") setTimeout(()=>{ closeModal(); openCrisis({record:false}); },900);
+}
+$("#sunimFab").addEventListener("click",openSunimChat);
+
+/* ---------- 이어 쓰기 카드 (U7) ---------- */
+function renderResume(){
+  const el=$("#resumeCard"), hidden=S.settings.hiddenResume||[];
+  const r=featOn("reflect") && S.reflections.slice().reverse().find(x=>!x.done && reflectHasText(x) && !hidden.includes(x.id) && Date.now()-new Date(x.updatedAt).getTime()<7*864e5);
+  if(!r){ el.innerHTML=""; return; }
+  el.innerHTML=`<div class="card rec" style="margin-top:12px"><span class="rec-ico" aria-hidden="true">📝</span>
+    <span class="rec-body"><span class="rec-title">쓰다 만 털어놓기가 있어요</span><br><span class="rec-desc">${esc((r.firstArrow||r.secondArrow||"").slice(0,30))}</span></span>
+    <button class="btn btn-primary" id="resumeGo">이어 쓰기</button><button class="btn btn-ghost" id="resumeHide" aria-label="닫기">✕</button></div>`;
+  $("#resumeGo").onclick=()=>openReflect({resume:r,step:firstEmptyStep(r)});
+  $("#resumeHide").onclick=()=>{ (S.settings.hiddenResume=S.settings.hiddenResume||[]).push(r.id); save(); renderResume(); };
+}
+
+/* ---------- 대화형 온보딩 (U1) — ④ 안전 고지는 건너뛸 수 없음 (F8) ---------- */
+function startOnboarding(){
+  const chosen=new Set(S.settings.enabledFeatures.filter(f=>FEATURES.some(x=>x.id===f)));
+  openModal(`<div class="chat-log" id="obLog" aria-live="polite"></div><div id="obAct" class="ob-act"></div>`,{center:true,dismissable:false});
+  $("#modal-root .overlay").dataset.locked="1";
+  const log=$("#obLog"), act=$("#obAct");
+  const say=(pose,html)=>{ log.insertAdjacentHTML("beforeend",`<div class="chat-row"><img src="sunim/${pose}.png" alt=""><div class="bubble">${html}</div></div>`); const sh=log.closest(".sheet"); sh.scrollTop=sh.scrollHeight; };
+  const me=t=>log.insertAdjacentHTML("beforeend",`<div class="chat-me">${esc(t)}</div>`);
+  const skipBtn='<button class="btn btn-ghost" id="obSkip">건너뛰기</button>';
+  const bindSkip=()=>{ const b=$("#obSkip"); if(b) b.onclick=()=>{ me("건너뛸게요"); step4(); }; };
+  const step1=()=>{
+    say("1_hapjang","어서 와요. 여기는 마음을 잠깐 내려놓고 가는 곳이에요.<br><b>방하착</b>, '내려놓아라'라는 뜻이에요.");
+    act.innerHTML=`<div class="close-row" style="gap:8px">${skipBtn}<button class="btn btn-primary" id="ob1">반가워요</button></div>`;
+    bindSkip(); $("#ob1").onclick=()=>{ me("반가워요"); step2(); };
+  };
+  const step2=()=>{
+    say("5_guide","뭐라고 불러 드릴까요?");
+    act.innerHTML=`<input id="obName" class="note-input" maxlength="12" placeholder="이름이나 별명" aria-label="이름이나 별명">
+      <div class="close-row" style="gap:8px;flex-wrap:wrap"><button class="btn" id="obFriend">그냥 '벗'이라고 불러 주세요</button><button class="btn btn-primary" id="ob2">좋아요</button></div>`;
+    const done=name=>{ S.settings.userName=name; save(); me(name==="벗"?"그냥 '벗'이라고 불러 주세요":name); step3(); };
+    $("#obFriend").onclick=()=>done("벗");
+    $("#ob2").onclick=()=>{ const v=$("#obName").value.trim(); done(v||"벗"); };
+    $("#obName").onkeydown=e=>{ if(e.key==="Enter") $("#ob2").click(); };
+  };
+  const step3=()=>{
+    say("4_lotus",`${esc(S.settings.userName)}님, 반가워요. 여기 있는 것들 중 마음 가는 것만 골라요. 나중에 바꿀 수 있어요.`);
+    const draw=()=>{ act.innerHTML=`<div class="ob-feats">${FEATURES.map(f=>`<button class="ob-feat" data-f="${f.id}" aria-pressed="${chosen.has(f.id)}"><span class="emo">${f.ico}</span><b>${esc(f.label)}</b><small>${esc(f.desc)}</small></button>`).join("")}</div>
+      <div class="close-row" style="gap:8px">${skipBtn}<button class="btn btn-primary" id="ob3">이렇게 할게요</button></div>`;
+      act.querySelectorAll(".ob-feat").forEach(b=>b.onclick=()=>{ const f=b.dataset.f; chosen.has(f)?chosen.delete(f):chosen.add(f); draw(); });
+      bindSkip();
+      $("#ob3").onclick=()=>{ S.settings.enabledFeatures=[...chosen, ...S.settings.enabledFeatures.filter(f=>!FEATURES.some(x=>x.id===f))]; save(); applyFeatures(); me(chosen.size?FEATURES.filter(f=>chosen.has(f.id)).map(f=>f.label).join(", "):"목탁만 쓸래요"); step4(); };
+    };
+    draw();
+  };
+  const step4=()=>{
+    say("1_hapjang",`하나만 약속해 주세요.<div class="card help-lines" style="margin-top:8px;padding:12px">이 앱은 교육·자기돌봄 도구이며, <b>종교 권유나 심리치료가 아닙니다.</b> 기록은 기본적으로 이 기기에만 저장돼요.<br><br>많이 힘들 때는 전문가의 도움을 먼저 받으세요.<br>자살예방 상담전화 <a href="tel:109">109</a> · 정신건강 상담전화 <a href="tel:15770199">1577-0199</a> (24시간)</div>`);
+    act.innerHTML=`<div class="close-row"><button class="btn btn-primary" id="safetyOk">알겠어요</button></div>`;
+    $("#safetyOk").onclick=()=>{ S.settings.safetyAck=true; if(!S.settings.startDate) S.settings.startDate=todayStr(); save(); me("알겠어요"); step5(); };
+  };
+  const step5=()=>{
+    say("3_moktak","그럼 첫 목탁, 한 번 두드려 볼까요?");
+    act.innerHTML=`<div class="close-row"><button class="btn btn-primary" id="obDone">🪵 두드리러 가기</button></div>`;
+    $("#obDone").onclick=()=>{
+      S.settings.onboardingDone=true; save();
+      $("#modal-root").innerHTML=""; document.body.style.overflow="";
+      setBubble(`${S.settings.userName&&S.settings.userName!=="벗"?S.settings.userName+"님, ":""}목탁을 톡 두드려 보세요.`);
+      $("#moktakBtn").classList.add("invite"); setTimeout(()=>$("#moktakBtn").classList.remove("invite"),3200);
+      setTimeout(()=>showTip("home_mood",$("#moodGrid")),3600);
+    };
+  };
+  step1();
+}
+
+/* =========================================================
+   ☁️ 기기 간 동기화 (1.5단계)
+   - Firebase 프로젝트는 Mindpullness와 공유 (mindpullness)
+   - 경로: maeummoktak/{uid} 만 사용. workbooks/{uid}는 절대 건드리지 않음
+   - 원칙: 필드 단위 병합(mergeStates). 타임스탬프만 보고 통째로 덮어쓰기 금지
+   - 수정 후 반드시: node scripts/test-sync-merge.js
+   ========================================================= */
+/*<MERGE>*/
+function mergeStates(remote, local){
+  const R=remote||{}, L=local||{};
+  const tsOf=x=>{ const v=x&&(x.updatedAt||x.ts||x.createdAt||x.date); const n=typeof v==="number"?v:Date.parse(v); return isNaN(n)?0:n; };
+  const bornOf=x=>{ const v=x&&(x.createdAt||x.ts||x.date); const n=Date.parse(v); return isNaN(n)?0:n; };
+  const deleted=[...new Set([...(R.deletedIds||[]),...(L.deletedIds||[])])];
+  const dels=new Set(deleted);
+  // id 기준 합집합. 같은 id가 양쪽에 있으면 더 최근에 고친 쪽, 같으면 이 기기(local) 쪽
+  const unionById=(a,b)=>{
+    const m=new Map();
+    (a||[]).forEach(x=>{ if(x&&x.id) m.set(x.id,x); });
+    (b||[]).forEach(x=>{ if(!x||!x.id) return; const y=m.get(x.id); if(!y||tsOf(x)>=tsOf(y)) m.set(x.id,x); });
+    return [...m.values()].filter(x=>!dels.has(x.id)).sort((p,q)=>bornOf(p)-bornOf(q));
+  };
+  const union=(a,b)=>[...new Set([...(a||[]),...(b||[])])];
+  // 담아 둔 구절: 구절마다 마지막으로 담기(+시각)/빼기(-시각)한 기록이 이김
+  const metaOf=st=>{ const mm={...(st.savedMeta||{})}; (st.savedVerses||[]).forEach((id,i)=>{ if(mm[id]==null) mm[id]=1+i; }); return mm; };
+  const savedMeta=metaOf(R);
+  Object.entries(metaOf(L)).forEach(([k,v])=>{ if(savedMeta[k]==null||Math.abs(v)>=Math.abs(savedMeta[k])) savedMeta[k]=v; });
+  const savedVerses=Object.entries(savedMeta).filter(([,t])=>t>0).sort((a,b)=>a[1]-b[1]).map(([k])=>k);
+  const moktak={...(R.moktak||{})};
+  Object.entries(L.moktak||{}).forEach(([d,n])=>{ moktak[d]=Math.max(moktak[d]||0,n||0); });
+  const rs=R.settings||{}, ls=L.settings||{};
+  const realName=n=>n&&n!=="벗";
+  const dates=[rs.startDate,ls.startDate].filter(Boolean).sort();
+  const settings={...rs,...ls,   // 소리·진동·움직임·쓰는 기능 등 기기별 설정은 이 기기 값 우선
+    onboardingDone:!!(rs.onboardingDone||ls.onboardingDone),
+    safetyAck:!!(rs.safetyAck||ls.safetyAck),
+    startDate:dates[0]||null,
+    userName:realName(ls.userName)?ls.userName:(realName(rs.userName)?rs.userName:(ls.userName||rs.userName||"")),
+    seenTips:union(rs.seenTips,ls.seenTips),
+    hiddenResume:union(rs.hiddenResume,ls.hiddenResume),
+    lastVisit:[rs.lastVisit,ls.lastVisit].filter(Boolean).sort().pop()||null
+  };
+  const rl=R.lessons||{}, ll=L.lessons||{}, memos={...(rl.memos||{})};
+  Object.entries(ll.memos||{}).forEach(([k,v])=>{ if(!memos[k]||String(v||"").length>=String(memos[k]).length) memos[k]=v; });
+  return {
+    ...R, ...L,
+    version:Math.max(R.version||1,L.version||1),
+    updatedAt:Math.max(R.updatedAt||0,L.updatedAt||0),
+    settings,
+    moods:unionById(R.moods,L.moods),
+    reflections:unionById(R.reflections,L.reflections),
+    practices:unionById(R.practices,L.practices),
+    savedVerses, savedMeta, moktak,
+    lessons:{completed:union(rl.completed,ll.completed),memos},
+    stickers:union(R.stickers,L.stickers),
+    deletedIds:deleted
+  };
+}
+/*</MERGE>*/
+
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyBx66_t9r3AmVeFxvgDU0z13EiERMqbATo",
+  authDomain: "mindpullness.firebaseapp.com",
+  projectId: "mindpullness",
+  storageBucket: "mindpullness.firebasestorage.app",
+  messagingSenderId: "834074782121",
+  appId: "1:834074782121:web:5fd7ca01ef1c5866c9fcb8"
+};
+const CLOUD_COLL = "maeummoktak";   // ⚠️ 변경 금지 (기존 사용자 데이터 접근 불가해짐)
+let CLOUD_ON=false, cloudDb=null, cloudUser=null, pushTimer=null, syncState="off", lastSync=null, syncing=false, syncAgain=false, lastPullAt=0;
+
+function cloudSetup(){
+  try{
+    if(!window.firebase){ syncState="unavailable"; renderSync(); return; }
+    if(!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
+    cloudDb=firebase.firestore(); CLOUD_ON=true;
+    firebase.auth().getRedirectResult().catch(e=>console.warn("redirect 로그인 실패",e));
+    firebase.auth().onAuthStateChanged(u=>{ cloudUser=u; syncState=u?"idle":"off"; renderSync(); if(u) cloudSync(); });
+  }catch(e){ console.warn("동기화 준비 실패",e); syncState="unavailable"; renderSync(); }
+}
+function scheduleCloudPush(){
+  if(!cloudUser) return;
+  clearTimeout(pushTimer); pushTimer=setTimeout(cloudSync,1500);
+}
+/* 읽기 → 병합 → 쓰기를 한 트랜잭션으로: 다른 기기가 그사이 쓴 내용도 잃지 않는다 */
+async function cloudSync(){
+  if(!CLOUD_ON||!cloudUser) return;
+  if(syncing){ syncAgain=true; return; }
+  syncing=true; setSync("syncing");
+  const ref=cloudDb.collection(CLOUD_COLL).doc(cloudUser.uid);
+  try{
+    let merged;
+    await cloudDb.runTransaction(async tx=>{
+      const snap=await tx.get(ref);
+      merged = snap.exists ? mergeStates(snap.data(), S) : S;
+      tx.set(ref, JSON.parse(JSON.stringify(merged)));
+    });
+    // 트랜잭션을 기다리는 동안 이 기기에서 바뀐 것도 살린다
+    S=mergeStates(merged,S); persistLocal();
+    lastSync=Date.now(); lastPullAt=Date.now(); setSync("ok"); refreshAfterSync();
+  }catch(e){
+    console.warn("동기화 실패",e); setSync(navigator.onLine?"error":"offline");
+  }finally{
+    syncing=false;
+    if(syncAgain){ syncAgain=false; scheduleCloudPush(); }
+  }
+}
+function setSync(st){ syncState=st; renderSync(); }
+function refreshAfterSync(){
+  renderMoktakCount(); renderTodayVerse(); renderFeatureSettings(); applyFeatures(); renderResume();
+  const act=document.querySelector(".screen.active");
+  if(act&&act.id==="screen-record" && !$("#modal-root .overlay")) renderRecord();
+  if(act&&act.id==="screen-verse") renderVerseTab();
+}
+function cloudLogin(){
+  if(!CLOUD_ON){ toast("동기화 기능을 불러오지 못했어요. 인터넷 연결을 확인해 주세요."); return; }
+  const p=new firebase.auth.GoogleAuthProvider();
+  firebase.auth().signInWithPopup(p).catch(e=>{
+    if(e&&e.code==="auth/popup-closed-by-user") return;
+    firebase.auth().signInWithRedirect(p).catch(err=>{ console.warn(err); toast("로그인하지 못했어요. 잠시 후 다시 시도해 주세요."); });
+  });
+}
+function cloudLogout(){
+  openModal(`<div class="crisis"><img src="sunim/6_mala.png" alt="염주를 든 정우스님"><h2>로그아웃할까요?</h2>
+    <p>이 기기의 기록은 그대로 남아요.<br>같은 주소에서 쓰는 <b>Mindpullness도 함께 로그아웃</b>돼요.</p>
+    <div class="close-row" style="gap:8px"><button class="btn" id="loCancel">취소</button><button class="btn btn-primary" id="loOk">로그아웃</button></div></div>`,{center:true});
+  $("#loCancel").onclick=closeModal;
+  $("#loOk").onclick=async()=>{ closeModal(); await firebase.auth().signOut(); toast("로그아웃했어요"); };
+}
+function renderSync(){
+  const box=$("#syncBox"), badge=$("#syncBadge"); if(!box) return;
+  const t=lastSync?new Date(lastSync):null;
+  const LABEL={syncing:"동기화 중…",ok:"동기화됨",error:"동기화 실패",offline:"오프라인",idle:"연결됨"};
+  if(cloudUser){
+    badge.hidden=false;
+    badge.textContent={syncing:"☁️ ⋯",ok:"☁️",error:"☁️ !",offline:"☁️ ·",idle:"☁️"}[syncState]||"☁️";
+    badge.setAttribute("aria-label","동기화 상태: "+(LABEL[syncState]||""));
+    box.innerHTML=`<p style="margin:0 0 4px"><b>${esc(cloudUser.email||"Google 계정")}</b>로 동기화하고 있어요.</p>
+      <p class="help-lines" style="margin:0">${esc(LABEL[syncState]||"")}${t&&syncState==="ok"?` · ${pad(t.getHours())}:${pad(t.getMinutes())}`:""}${syncState==="offline"?" · 연결되면 자동으로 맞춰요":""}</p>
+      <div class="close-row" style="gap:8px;justify-content:flex-start"><button class="btn" id="syncNow">지금 동기화</button><button class="btn btn-ghost" id="syncOut">로그아웃</button></div>`;
+    $("#syncNow").onclick=()=>cloudSync();
+    $("#syncOut").onclick=cloudLogout;
+  }else{
+    badge.hidden=true;
+    box.innerHTML=syncState==="unavailable"
+      ? `<p class="help-lines" style="margin:0">동기화 기능을 불러오지 못했어요. 인터넷에 연결된 뒤 앱을 다시 열어 주세요. 기록은 이 기기에 안전하게 남아 있어요.</p>`
+      : `<p style="margin:0 0 4px">Google로 로그인하면 휴대폰과 컴퓨터에서 같은 기록을 볼 수 있어요.</p>
+        <p class="help-lines" style="margin:0">로그인하지 않아도 모든 기능을 쓸 수 있어요. 기록은 내 계정 전용 공간에 저장되어 다른 사용자는 볼 수 없어요.</p>
+        <div class="close-row" style="justify-content:flex-start"><button class="btn btn-primary" id="syncIn">Google로 로그인</button></div>`;
+    if($("#syncIn")) $("#syncIn").onclick=cloudLogin;
+  }
+}
+window.addEventListener("online",()=>{ if(cloudUser) cloudSync(); });
+document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible" && cloudUser && Date.now()-lastPullAt>30000) cloudSync(); });
+
+/* ---------- 부팅 ---------- */
+function boot(){
+  S=load(); applyMotion();
+  // 2단계 이전에 안전 고지를 마친 사용자는 온보딩을 다시 보지 않음
+  if(S.settings.safetyAck && !S.settings.onboardingDone){ S.settings.onboardingDone=true; }
+  renderMoodGrid(); renderMoktakCount(); renderTodayVerse(); renderFeatureSettings(); applyFeatures(); renderResume();
+  $("#tipsReset").onclick=resetTips;
+  renderSync(); cloudSetup();
+  // 재방문 환영 (U7): 마지막 방문 후 3일 이상
+  const last=S.settings.lastVisit?new Date(S.settings.lastVisit):null;
+  const away = last ? (Date.now()-last.getTime())/864e5 : 0;
+  const nm = S.settings.userName && S.settings.userName!=="벗" ? S.settings.userName+"님, " : "";
+  setBubble(away>=3 ? nm+RETURN_LINE : pick(HOME_LINES));
+  S.settings.lastVisit=new Date().toISOString(); save();
+  // 스플래시 (U3): 최대 1초
+  const sp=$("#splash");
+  setTimeout(()=>{ sp.classList.add("hide"); setTimeout(()=>sp.remove(),500); if(!S.settings.onboardingDone || !S.settings.safetyAck) startOnboarding(); }, reduceMotion()?150:900);
+}
+boot();
+</script>
+</body>
+</html>
